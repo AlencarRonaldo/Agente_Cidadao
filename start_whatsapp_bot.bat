@@ -4,3 +4,4 @@ REM %~dp0 expande para o caminho do script (ex: D:\Agente_Cidadao\)
 cd /d %~dp0whatsapp_bot
 node index.js
 PAUSE
+

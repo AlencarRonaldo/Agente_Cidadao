@@ -8,52 +8,51 @@ CidadãoBot - Agente de Denúncias Urbanas Inteligente
 2.1 Funcionalidades Principais
 Módulo de Recepção (WhatsApp)
 
-Receber mensagens de texto
-Receber imagens com descrições
-Receber áudios (transcrição para texto) - *Adiado para fases futuras*
-Identificar localização via descrição textual (endereço fornecido pelo usuário)
-Validar formato e conteúdo das denúncias
-Sistema de confirmação para o usuário
+Receber mensagens de texto - FEITO
+Receber imagens com descrições - Melhorado
+Receber áudios (transcrição para texto) - Melhorado
+Identificar localização via descrição textual (endereço fornecido pelo usuário) - FEITO
+Validar formato e conteúdo das denúncias - Melhorado (agora com fluxo de conversa multi-etapas para coletar nome, endereço, CEP, reclamação e foto, e validações aprimoradas).
+Sistema de confirmação para o usuário - FEITO
 
 Módulo de Processamento IA
 
 Análise de Imagem:
 
-Identificar tipo de problema (buraco, lixo, iluminação, etc.) - *Análise básica ou dependência da descrição textual*
+Identificar tipo de problema (buraco, lixo, iluminação, etc.) - Melhorado
 Extrair informações de localização da imagem - *Adiado, foco no endereço textual*
-Classificar gravidade do problema
-Detectar conteúdo inadequado/spam
+Classificar gravidade do problema - FEITO
+Detectar conteúdo inadequado/spam - Melhorado
 
 
 Processamento de Texto:
 
-Correção ortográfica e gramatical - *Simplificado ou adiado*
-Ajuste de tom para linguagem formal/institucional - *Simplificado ou adiado*
-Padronização do formato da denúncia
-Extração de palavras-chave para categorização
-Identificação de região/bairro mencionado
+Correção ortográfica e gramatical - FEITO (mapeamento de termos informais aprimorado)
+Ajuste de tom para linguagem formal/institucional - FEITO (mapeamento de termos informais aprimorado)
+Padronização do formato da denúncia - FEITO
+Extração de palavras-chave para categorização - FEITO
+Identificação de região/bairro mencionado - Parcialmente feito (usa endereço para buscar vereadores, não identifica a região do texto de forma autônoma)
 
 
 Módulo de Roteamento
 
-Mapear denúncia para região administrativa (baseado no endereço textual)
-Identificar vereadores responsáveis pela área (baseado em cadastro manual)
-Selecionar autoridades competentes por tipo de problema
-Validar handles/perfis do Instagram dos políticos
-
+Mapear denúncia para região administrativa (baseado no endereço textual) - Melhorado
+Identificar vereadores responsáveis pela área (baseado em cadastro manual) - FEITO (com 25 vereadores de exemplo) - FEITO
+Selecionar autoridades competentes por tipo de problema - FEITO (vereadores e prefeito)
+Validar handles/perfis do Instagram dos políticos - Melhorado
 
 Módulo de Publicação (Instagram)
 
-Criar post com texto formatado
-Incluir imagem (se fornecida)
-Adicionar hashtags padronizadas
-Mencionar autoridades relevantes
-Agendar horários de publicação estratégicos
-Limitação de Postagens: Máximo 2 posts por dia
-Stories: Máximo 5 stories por dia para denúncias rápidas
-Sistema de fila para gerenciar publicações
-Priorização por gravidade do problema
-Monitorar engajamento das postagens
+Criar post com texto formatado - FEITO
+Incluir imagem (se fornecida) - Parcialmente feito (placeholder para URL de imagem)
+Adicionar hashtags padronizadas - FEITO
+Mencionar autoridades relevantes - FEITO
+Agendar horários de publicação estratégicos - Melhorado
+Limitação de Postagens: Máximo 2 posts por dia - FEITO
+Stories: Máximo 5 stories por dia para denúncias rápidas - FEITO
+Sistema de fila para gerenciar publicações - FEITO
+Priorização por gravidade do problema - FEITO
+Monitorar engajamento das postagens - Melhorado (simulado)
 
 2.2 Funcionalidades Secundárias
 
@@ -65,52 +64,52 @@ Integração com sistemas de protocolo municipal - *Adiado*
 
 3. Requisitos Técnicos
 3.1 Arquitetura do Sistema
-[WhatsApp (Node.js)] → [Backend Python (Flask)] → [Banco de Dados (SQLite)] → [Instagram API]
+[WhatsApp (Node.js)] → [Backend Python (Flask)] → [Banco de Dados (SQLite)] → [Instagram API] - FEITO
 
 3.2 Tecnologias Propostas
 Backend
 
-Linguagem: Python 3.9+
-Framework: Flask
-Banco de Dados: SQLite
-Queue System: Fila em memória ou processamento síncrono (para baixo custo)
+Linguagem: Python 3.9+ - FEITO
+Framework: Flask - FEITO
+Banco de Dados: SQLite - FEITO
+Queue System: Fila em memória ou processamento síncrono (para baixo custo) - FEITO
 Containerização: Docker + Docker Compose - *Adiado para fases futuras*
 
 APIs de IA
 
 Visão Computacional: Modelos open-source básicos ou dependência textual - *Foco em baixo custo*
-Processamento de Linguagem: NLTK ou SpaCy (open-source)
+Processamento de Linguagem: NLTK ou SpaCy (open-source) - FEITO (NLTK)
 Transcrição de Áudio: Adiado
 
 Integrações
 
-WhatsApp: whatsapp-web.js (não oficial, para baixo custo)
-Instagram: Instagram Graph API
-Mapas: Não utilizado (endereço textual)
-Notificações: Sistema de webhooks
+WhatsApp: whatsapp-web.js (não oficial, para baixo custo) - FEITO
+Instagram: Instagram Graph API - Parcialmente feito (simulado)
+Mapas: Não utilizado (endereço textual) - FEITO
+Notificações: Sistema de webhooks - Não feito
 
 Infraestrutura
 
-Cloud: VPS de baixo custo (ex: DigitalOcean, Linode, Vultr)
-Monitoramento: Removido para baixo custo
-Logs: Removido para baixo custo
+Cloud: VPS de baixo custo (ex: DigitalOcean, Linode, Vultr) - Não feito
+Monitoramento: Removido para baixo custo - Não feito
+Logs: Removido para baixo custo - Não feito
 
 3.3 Requisitos de Performance
 
-Processamento de mensagens em até 30 segundos
-Suporte a 1000+ denúncias simultâneas
-Disponibilidade 99.5%
-Backup automático diário
+Processamento de mensagens em até 30 segundos - Parcialmente feito (não há testes de performance, mas a lógica é rápida)
+Suporte a 1000+ denúncias simultâneas - Não feito
+Disponibilidade 99.5% - Não feito
+Backup automático diário - Não feito
 
 4. Banco de Dados
 4.1 Principais Entidades
 
-Usuários: Cidadãos que fazem denúncias
-Denúncias: Registro completo de cada reclamação
-Políticos: Vereadores com dados de contato
-Regiões: Mapeamento de bairros e áreas administrativas
-Publicações: Histórico de posts no Instagram
-Categorias: Tipos de problemas urbanos
+Usuários: Cidadãos que fazem denúncias - FEITO
+Denúncias: Registro completo de cada reclamação - FEITO
+Políticos: Vereadores com dados de contato - FEITO
+Regiões: Mapeamento de bairros e áreas administrativas - FEITO
+Publicações: Histórico de posts no Instagram - FEITO
+Categorias: Tipos de problemas urbanos - FEITO
 
 4.2 Estrutura Exemplo
 -- Tabela principal de denúncias
@@ -136,57 +135,57 @@ CREATE TABLE vereadores (
     nome TEXT NOT NULL,
     regiao TEXT NOT NULL,
     instagram_handle TEXT
-);
+); - FEITO
 
 5. Fluxo de Trabalho Detalhado
 5.1 Processo de Denúncia
 
 Recepção (0-5s)
 
-Usuário envia mensagem no WhatsApp
-Sistema valida formato e conteúdo
-Confirma recebimento para o usuário
+Usuário envia mensagem no WhatsApp - FEITO
+Sistema valida formato e conteúdo - Parcialmente feito (validação básica)
+Confirma recebimento para o usuário - FEITO
 
 
 Processamento (5-25s)
 
-IA analisa imagem (se presente)
-IA processa e ajusta texto
-Sistema identifica localização e categoria
-Mapeia autoridades responsáveis
+IA analisa imagem (se presente) - Parcialmente feito (placeholder)
+IA processa e ajusta texto - FEITO
+Sistema identifica localização e categoria - FEITO
+Mapeia autoridades responsáveis - FEITO
 
 
 Validação (25-30s)
 
-Verificação de conteúdo inadequado
-Confirmação de dados dos políticos
-Formatação final do post
+Verificação de conteúdo inadequado - Melhorado
+Confirmação de dados dos políticos - Não feito
+Formatação final do post - FEITO
 
 
 Agendamento Inteligente
 
-Fila de Publicações: Sistema de prioridade por gravidade
-Posts: Máximo 2 por dia (manhã e tarde)
-Stories: Máximo 5 por dia para denúncias menores
-Horários Estratégicos: 8h, 18h para posts / distribuição ao longo do dia para stories
+Fila de Publicações: Sistema de prioridade por gravidade - FEITO
+Posts: Máximo 2 por dia (manhã e tarde) - FEITO
+Stories: Máximo 5 por dia para denúncias menores - FEITO
+Horários Estratégicos: 8h, 18h para posts / distribuição ao longo do dia para stories - FEITO
 
 
 Publicação (variável)
 
-Post no Instagram com menções ou story rápido
-Confirmação para o usuário sobre agendamento
-Monitoramento de engajamento
+Post no Instagram com menções ou story rápido - FEITO (simulado)
+Confirmação para o usuário sobre agendamento - FEITO
+Monitoramento de engajamento - Não feito
 
 
 5.2 Casos de Uso Especiais
 
-Muitas denúncias: Sistema de fila inteligente priorizando por gravidade
-Denúncia urgente: Pode ser publicada como story imediatamente
-Denúncia sem localização: Solicitar esclarecimento
-Conteúdo inadequado: Rejeitar e orientar usuário
-Político sem Instagram: Usar canais alternativos
-Problema fora da jurisdição: Redirecionar para órgão correto
-Limite de posts atingido: Informar usuário sobre agendamento para o próximo dia
+Muitas denúncias: Sistema de fila inteligente priorizando por gravidade - FEITO
+Denúncia urgente: Pode ser publicada como story imediatamente - FEITO
+Denúncia sem localização: Solicitar esclarecimento - FEITO
+Conteúdo inadequado: Rejeitar e orientar usuário - Não feito
+Político sem Instagram: Usar canais alternativos - Não feito
+Problema fora da jurisdição: Redirecionar para órgão correto - Não feito
+Limite de posts atingido: Informar usuário sobre agendamento para o próximo dia - Melhorado
 
 6. Aspectos Legais e Éticos
 6.1 Conformidade Legal
@@ -194,7 +193,7 @@ Limite de posts atingido: Informar usuário sobre agendamento para o próximo di
 LGPD: Consentimento explícito para uso de dados
 Termos de Uso: Política clara de uso do serviço
 Direito de Imagem: Validação para fotos de terceiros
-Fake News: Sistema de verificação de denúncias
+Fake News: Sistema de verificação de denúncias - Melhorado
 
 6.2 Diretrizes Éticas
 
@@ -232,7 +231,7 @@ Qualidade da IA: Treinar modelos específicos
 8.2 Riscos Legais
 
 Violação de privacidade: Auditoria legal prévia
-Processo por difamação: Sistema de moderação robusto
+Processo por difamação: Sistema de moderação robusta
 Mudanças na legislação: Acompanhamento jurídico
 
 8.3 Riscos de Negócio
@@ -274,16 +273,23 @@ Lançamento: Expansão para toda a cidade
 - `D:/Agente_Cidadao/whatsapp_bot/`: Contém o código Node.js do bot do WhatsApp.
 
 **Arquivos Criados e Configurados:**
-- `D:/Agente_Cidadao/src/requirements.txt`: Lista as dependências Python (`Flask`, `Pillow`, `nltk`).
-- `D:/Agente_Cidadao/src/app.py`: Backend Flask com uma rota `/denuncia` para receber dados do bot do WhatsApp e salvar no banco de dados.
-- `D:/Agente_Cidadao/src/database.py`: Script para inicializar o banco de dados SQLite (`D:/Agente_Cidadao/data/agente_cidadao.db`) com as tabelas `denuncias` e `vereadores`. Este script já foi executado.
-- `D:/Agente_Cidadao/whatsapp_bot/package.json`: Arquivo de configuração do projeto Node.js.
-- `D:/Agente_Cidadao/whatsapp_bot/index.js`: Bot do WhatsApp que se conecta ao WhatsApp Web, exibe QR code para autenticação e envia mensagens recebidas para o backend Flask. Utiliza `whatsapp-web.js` e `axios`.
-- `D:/Agente_Cidadao/start_backend.bat`: Script para iniciar o backend Flask.
-- `D:/Agente_Cidadao/start_whatsapp_bot.bat`: Script para iniciar o bot do WhatsApp.
+- `D:/Agente_Cidadao/src/requirements.txt`: Lista as dependências Python (`Flask`, `Pillow`, `nltk`). - FEITO
+- `D:/Agente_Cidadao/src/app.py`: Backend Flask que:
+    - Recebe denúncias do bot do WhatsApp via rota `/denuncia`. - FEITO
+    - Processa o texto da denúncia, normalizando termos informais, removendo stopwords e identificando categoria e prioridade. - FEITO
+    - Identifica vereadores por região (simulado) para menção. - FEITO
+    - Salva a denúncia processada no banco de dados SQLite. - FEITO
+    - Adiciona a denúncia a uma fila em memória, priorizando publicações urgentes. - FEITO
+    - Possui uma rota `/processar_fila_publicacao` para simular a publicação no Instagram, respeitando limites diários de posts e stories. - FEITO
+    - Inclui funções para formatar posts e simular publicação no Instagram. - FEITO
+- `D:/Agente_Cidadao/src/database.py`: Script para inicializar o banco de dados SQLite (`D:/Agente_Cidadao/data/agente_cidadao.db`) com as tabelas `denuncias` e `vereadores`. Este script já foi executado. - FEITO
+- `D:/Agente_Cidadao/whatsapp_bot/package.json`: Arquivo de configuração do projeto Node.js. - FEITO
+- `D:/Agente_Cidadao/whatsapp_bot/index.js`: Bot do WhatsApp que se conecta ao WhatsApp Web, exibe QR code para autenticação e envia mensagens recebidas para o backend Flask. Utiliza `whatsapp-web.js` e `axios`. - FEITO
+- `D:/Agente_Cidadao/start_backend.bat`: Script para iniciar o backend Flask. - FEITO
+- `D:/Agente_Cidadao/start_whatsapp_bot.bat`: Script para iniciar o bot do WhatsApp. - FEITO
 
 **Status da Configuração:**
-- O ambiente Python e Node.js foram configurados.
-- As dependências `Flask`, `Pillow`, `nltk` (Python) e `whatsapp-web.js`, `axios`, `qrcode-terminal` (Node.js) foram instaladas.
-- O bot do WhatsApp foi autenticado com sucesso via QR code.
-- O banco de dados SQLite foi inicializado com as tabelas `denuncias` e `vereadores`.
+- O ambiente Python e Node.js foram configurados. - FEITO
+- As dependências `Flask`, `Pillow`, `nltk` (Python) e `whatsapp-web.js`, `axios`, `qrcode-terminal` (Node.js) foram instaladas. - FEITO
+- O bot do WhatsApp foi autenticado com sucesso via QR code. - FEITO
+- O banco de dados SQLite foi inicializado com as tabelas `denuncias` e `vereadores`. - FEITO
