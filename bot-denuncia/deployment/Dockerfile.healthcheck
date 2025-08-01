@@ -1,0 +1,19 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl jq
+
+# Copy health check application
+COPY deployment/healthcheck/ ./
+
+# Install dependencies
+RUN npm install --production
+
+# Health check script
+RUN chmod +x health-monitor.js
+
+EXPOSE 8080
+
+CMD ["node", "health-monitor.js"]

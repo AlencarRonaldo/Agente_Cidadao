@@ -1,0 +1,63 @@
+# Dependencies
+/node_modules
+
+# Prisma
+/prisma/migrations
+/prisma/seed.js
+
+# Environment
+.env
+*.env.local
+.env.*
+
+# Security & Credentials
+CREDENCIAIS.md
+credenciais.md
+passwords.txt
+*.key
+*.pem
+*.p12
+
+# WhatsApp Session
+whatsapp-session.json
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Uploads & Media
+uploads/
+temp/
+*.tmp
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/.env.playwright

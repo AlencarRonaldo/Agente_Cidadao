@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConversaUsuario {
+  id              String         @id @default(cuid())
+  phoneNumber     String         @unique
+  estado          EstadoConversa @default(INICIAL)
+  dadosTemp       Json?
+  ultimaInteracao DateTime       @default(now())
+  expiresAt       DateTime
+  tentativas      Int            @default(0)
+  problemaTemp    String?
+  enderecoTemp    String?
+  bairroTemp      String?
+  imagemTemp      String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([expiresAt])
+}
+
+model Denuncia {
+  id                  String         @id @default(cuid())
+  protocolo           String         @unique
+  texto               String
+  textoFiltrado       String?
+  endereco            String
+  bairro              String
+  imagemUrl           String
+  status              Status         @default(RECEBIDA)
+  vereadores          String[]
+  conversaCompleta    Json?
+  tempoConversa       Int?
+  aprovadaBot         Boolean        @default(false)
+  scoreBot            Float?
+  motivoRejeicaoBot   String?
+  aprovadaAdmin       Boolean        @default(false)
+  motivoRejeicaoAdmin String?
+  editadaPorAdmin     Boolean        @default(false)
+  observacoesAdmin    String?
+  createdAt           DateTime       @default(now())
+  processedAt         DateTime?
+  reviewedAt          DateTime?
+  publishedAt         DateTime?
+  phoneNumber         String
+  adminUserId         String?
+  // Novos campos para sistema de publicação
+  scheduledPublishAt  DateTime?      // Quando deve ser publicado
+  priority            Int?           @default(1) // 1=alta, 2=normal, 3=baixa
+  instagramPostId     String?        // ID do post no Instagram
+  publishAttempts     Int            @default(0) // Tentativas de publicação
+  lastAttemptAt       DateTime?      // Última tentativa de publicação
+  publishError        String?        // Último erro de publicação
+  photoPending        PhotoPending[]
+
+  @@index([phoneNumber, createdAt])
+  @@index([scheduledPublishAt])
+  @@index([priority])
+  @@index([instagramPostId])
+}
+
+model Vereador {
+  id             String   @id @default(cuid())
+  nome           String
+  instagram      String   @unique
+  partido        String
+  ativo          Boolean  @default(true)
+  bairros        String[]
+  mencoes        Int      @default(0)
+  especialidades String[]
+  responsivo     Boolean  @default(true)
+  prioridade     Int      @default(1)
+  createdAt      DateTime @default(now())
+
+  @@index([bairros])
+}
+
+model Bairro {
+  id            String   @id @default(cuid())
+  nome          String   @unique
+  aliases       String[]
+  cidade        String   @default("São Paulo")
+  regiao        String
+  subprefeitura String?
+  ativo         Boolean  @default(true)
+  denuncias     Int      @default(0)
+
+  @@index([nome])
+  @@index([aliases])
+}
+
+model AdminUser {
+  id        String    @id @default(cuid())
+  nome      String
+  email     String    @unique
+  senha     String
+  role      Role      @default(MODERADOR)
+  ativo     Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  lastLogin DateTime?
+}
+
+model PhotoPending {
+  id              String    @id @default(cuid())
+  denunciaId      String
+  originalName    String
+  filename        String
+  mimeType        String
+  fileSize        Int
+  photoPath       String?
+  thumbnailPath   String?
+  metadata        String?
+  isEncrypted     Boolean   @default(false)
+  encryptionKey   String?
+  status          String    @default("PENDING")
+  uploadedAt      DateTime  @default(now())
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  comments        String?
+  publishedAt     DateTime?
+  instagramPostId String?
+  instagramUrl    String?
+  cleanedUpAt     DateTime?
+  processingTime  Int?
+  denuncia        Denuncia  @relation(fields: [denunciaId], references: [id])
+
+  @@index([cleanedUpAt])
+  @@index([denunciaId])
+  @@index([publishedAt])
+  @@index([status])
+  @@index([uploadedAt])
+}
+
+model PhotoAuditLog {
+  id        String   @id @default(cuid())
+  photoId   String
+  action    String
+  userId    String
+  metadata  String?
+  ipAddress String?
+  timestamp DateTime @default(now())
+
+  @@index([photoId])
+  @@index([timestamp])
+}
+
+enum EstadoConversa {
+  INICIAL
+  AGUARDANDO_PROBLEMA
+  AGUARDANDO_ENDERECO
+  AGUARDANDO_ENDERECO_CORRIGIDO
+  AGUARDANDO_FOTO
+  AGUARDANDO_CONFIRMACAO
+  DENUNCIA_PROCESSADA
+  CONSULTANDO_STATUS
+  EDITANDO_DENUNCIA
+  SELECIONANDO_CATEGORIA
+  SELECIONANDO_SUBCATEGORIA
+}
+
+enum Status {
+  RECEBIDA
+  VALIDANDO_CONVERSA
+  BAIRRO_INVALIDO
+  PROCESSANDO
+  APROVADA_BOT
+  PENDENTE_MODERACAO
+  REJEITADA_BOT
+  APROVADA_ADMIN
+  REJEITADA_ADMIN
+  AGENDADA
+  PUBLICADA
+  ERRO
+}
+
+enum Role {
+  ADMIN
+  MODERADOR
+  VISUALIZADOR
+}

@@ -1,0 +1,440 @@
+/* Theme Transitions CSS */
+/* Transições suaves para mudança de tema */
+
+/* Transições globais para o body */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease !important;
+}
+
+/* Transições para cards e papeis */
+.MuiCard-root,
+.MuiPaper-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Transições para elementos de texto */
+.MuiTypography-root {
+  transition: color 0.3s ease !important;
+}
+
+/* Transições para botões */
+.MuiButton-root {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Transições para inputs */
+.MuiTextField-root .MuiOutlinedInput-root {
+  transition: all 0.3s ease !important;
+}
+
+.MuiTextField-root .MuiInputLabel-root {
+  transition: color 0.3s ease !important;
+}
+
+/* Transições para chips */
+.MuiChip-root {
+  transition: all 0.2s ease !important;
+}
+
+/* Transições para AppBar */
+.MuiAppBar-root {
+  transition: all 0.3s ease !important;
+}
+
+/* Transições para Table */
+.MuiTableCell-root {
+  transition: all 0.3s ease !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  transition: background-color 0.3s ease !important;
+}
+
+/* Transições para Dialog */
+.MuiDialog-paper {
+  transition: all 0.3s ease !important;
+}
+
+/* Transições para IconButton */
+.MuiIconButton-root {
+  transition: all 0.2s ease !important;
+}
+
+/* Transições para Divider */
+.MuiDivider-root {
+  transition: border-color 0.3s ease !important;
+}
+
+/* Transições customizadas para o toggle do tema */
+.theme-toggle-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.theme-toggle-icon {
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+}
+
+.theme-toggle-icon.rotating {
+  transform: rotate(360deg);
+}
+
+/* Animações para hover effects */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Efeitos de hover melhorados para cards */
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Transições para modo escuro específicas */
+[data-theme="dark"] .MuiCard-root:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="light"] .MuiCard-root:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Animações personalizadas para loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Scrollbar personalizado para temas */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Variáveis CSS para tema claro */
+[data-theme="light"] {
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+}
+
+/* Variáveis CSS para tema escuro - Otimizado para contraste */
+[data-theme="dark"] {
+  --scrollbar-track: #475569;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #cbd5e1;
+  
+  /* Cores de status com melhor contraste */
+  --status-success: #4ade80;
+  --status-error: #fb7185;
+  --status-warning: #fbbf24;
+  --status-info: #38bdf8;
+  --status-pending: #a78bfa;
+  
+  /* Gradientes para elementos especiais */
+  --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  --gradient-secondary: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  --gradient-success: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  --gradient-error: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+  
+  /* Backgrounds para componentes especiais */
+  --card-elevated-bg: rgba(30, 41, 59, 0.8);
+  --modal-backdrop: rgba(2, 6, 23, 0.75);
+  --table-stripe-odd: rgba(255, 255, 255, 0.01);
+  --table-stripe-even: rgba(255, 255, 255, 0.02);
+  --table-hover: rgba(96, 165, 250, 0.08);
+}
+
+/* Melhorias para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus indicators melhorados */
+.MuiButton-root:focus-visible,
+.MuiIconButton-root:focus-visible,
+.MuiTextField-root:focus-within {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+[data-theme="light"] {
+  --focus-color: #2563eb;
+}
+
+[data-theme="dark"] {
+  --focus-color: #60a5fa;
+}
+
+/* ===== MELHORIAS ESPECÍFICAS PARA TEMA DARK ===== */
+
+/* Melhor contraste para texto em tema dark */
+[data-theme="dark"] .MuiTypography-h1,
+[data-theme="dark"] .MuiTypography-h2,
+[data-theme="dark"] .MuiTypography-h3,
+[data-theme="dark"] .MuiTypography-h4,
+[data-theme="dark"] .MuiTypography-h5,
+[data-theme="dark"] .MuiTypography-h6 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Texto do corpo com contraste aprimorado */
+[data-theme="dark"] .MuiTypography-body1,
+[data-theme="dark"] .MuiTypography-body2 {
+  color: #e2e8f0 !important;
+}
+
+/* Bordas mais visíveis em tema dark */
+[data-theme="dark"] .MuiCard-root,
+[data-theme="dark"] .MuiPaper-root {
+  border: 1px solid #475569 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Melhor contraste para tabelas */
+[data-theme="dark"] .MuiTableHead-root .MuiTableCell-root {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #475569 !important;
+}
+
+[data-theme="dark"] .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+  background-color: var(--table-stripe-even) !important;
+}
+
+[data-theme="dark"] .MuiTableBody-root .MuiTableRow-root:nth-of-type(odd) {
+  background-color: var(--table-stripe-odd) !important;
+}
+
+[data-theme="dark"] .MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: var(--table-hover) !important;
+}
+
+[data-theme="dark"] .MuiTableCell-root {
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+/* Chips com melhor visibilidade */
+[data-theme="dark"] .MuiChip-root {
+  font-weight: 600 !important;
+  border: 1px solid transparent;
+}
+
+[data-theme="dark"] .MuiChip-colorSuccess {
+  background-color: var(--status-success) !important;
+  color: #052e16 !important;
+  border-color: #22c55e;
+}
+
+[data-theme="dark"] .MuiChip-colorError {
+  background-color: var(--status-error) !important;
+  color: #fef2f2 !important;
+  border-color: #f43f5e;
+}
+
+[data-theme="dark"] .MuiChip-colorWarning {
+  background-color: var(--status-warning) !important;
+  color: #451a03 !important;
+  border-color: #f59e0b;
+}
+
+[data-theme="dark"] .MuiChip-colorInfo {
+  background-color: var(--status-info) !important;
+  color: #0c4a6e !important;
+  border-color: #0ea5e9;
+}
+
+/* Formulários com melhor contraste */
+[data-theme="dark"] .MuiOutlinedInput-root {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root.Mui-focused {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root.Mui-focused {
+  color: #60a5fa !important;
+  font-weight: 600 !important;
+}
+
+/* Buttons com melhor contraste */
+[data-theme="dark"] .MuiButton-root {
+  font-weight: 600 !important;
+  letter-spacing: 0.025em;
+}
+
+[data-theme="dark"] .MuiButton-containedPrimary {
+  background: var(--gradient-primary) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-theme="dark"] .MuiButton-containedSecondary {
+  background: var(--gradient-secondary) !important;
+  color: #0f172a !important;
+}
+
+/* Dialogs com backdrop melhorado */
+[data-theme="dark"] .MuiDialog-root .MuiBackdrop-root {
+  background-color: var(--modal-backdrop) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+[data-theme="dark"] .MuiDialog-paper {
+  border: 1px solid #475569 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Tooltips aprimorados */
+[data-theme="dark"] .MuiTooltip-tooltip {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border: 1px solid #475569 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 500 !important;
+}
+
+/* Select e MenuItem com melhor contraste */
+[data-theme="dark"] .MuiSelect-select {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .MuiMenuItem-root {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .MuiMenuItem-root:hover {
+  background-color: rgba(96, 165, 250, 0.12) !important;
+}
+
+[data-theme="dark"] .MuiMenuItem-root.Mui-selected {
+  background-color: rgba(96, 165, 250, 0.16) !important;
+  color: #60a5fa !important;
+  font-weight: 500 !important;
+}
+
+/* Alert components com melhor contraste */
+[data-theme="dark"] .MuiAlert-standardError {
+  background-color: rgba(251, 113, 133, 0.15) !important;
+  color: #fda4af !important;
+  border: 1px solid #fb7185 !important;
+}
+
+[data-theme="dark"] .MuiAlert-standardWarning {
+  background-color: rgba(251, 191, 36, 0.15) !important;
+  color: #fcd34d !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+[data-theme="dark"] .MuiAlert-standardInfo {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  color: #7dd3fc !important;
+  border: 1px solid #38bdf8 !important;
+}
+
+[data-theme="dark"] .MuiAlert-standardSuccess {
+  background-color: rgba(74, 222, 128, 0.15) !important;
+  color: #86efac !important;
+  border: 1px solid #4ade80 !important;
+}
+
+/* Melhorias para elementos de navegação */
+[data-theme="dark"] .MuiAppBar-root {
+  background-color: #0f172a !important;
+  border-bottom: 1px solid #475569 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Estados de foco mais visíveis */
+[data-theme="dark"] .MuiButton-root:focus-visible,
+[data-theme="dark"] .MuiIconButton-root:focus-visible {
+  outline: 2px solid #60a5fa !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2) !important;
+}
+
+/* Melhorias para high contrast mode */
+@media (prefers-contrast: high) {
+  [data-theme="dark"] {
+    --focus-color: #93c5fd;
+  }
+  
+  [data-theme="dark"] .MuiTypography-root {
+    color: #ffffff !important;
+  }
+  
+  [data-theme="dark"] .MuiButton-root {
+    border: 2px solid currentColor !important;
+  }
+}

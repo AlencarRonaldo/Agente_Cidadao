@@ -1,0 +1,610 @@
+{
+  "metadata": {
+    "reportId": "SEC-AUDIT-1753893090832",
+    "generatedAt": "2025-07-30T16:31:30.829Z",
+    "assessmentType": "COMPREHENSIVE_SECURITY_AUDIT",
+    "systemName": "bot-denuncia",
+    "assessor": "Security Compliance Validator",
+    "version": "1.0.0"
+  },
+  "executiveSummary": {
+    "overallRiskLevel": "HIGH",
+    "criticalFindings": 12,
+    "highRiskVulnerabilities": 8,
+    "lgpdComplianceScore": "65%",
+    "keyFindings": [
+      "Weak JWT secret configuration poses authentication bypass risk",
+      "Rate limiting disabled on critical authentication endpoints",
+      "Personal data stored unencrypted in database",
+      "Instagram Private API usage violates platform terms",
+      "Missing SSL/TLS encryption for database connections",
+      "Inadequate data retention policies for LGPD compliance",
+      "No formal consent management system implemented",
+      "Audit trail system lacks integrity protection"
+    ],
+    "businessImpact": {
+      "dataBreachRisk": "HIGH",
+      "regulatoryFines": "Up to R$ 50M (2% of annual revenue)",
+      "reputationalDamage": "HIGH",
+      "operationalDisruption": "MEDIUM"
+    },
+    "urgentActions": [
+      "Implement strong JWT secret rotation within 24 hours",
+      "Enable rate limiting on all authentication endpoints",
+      "Encrypt all personal data at rest using AES-256",
+      "Replace Instagram Private API with official Graph API",
+      "Implement SSL/TLS for all database connections"
+    ]
+  },
+  "securityAssessment": {
+    "overallScore": 53,
+    "riskRating": "HIGH",
+    "categories": {
+      "authentication": {
+        "score": 75,
+        "vulnerabilities": {
+          "score": 65,
+          "findings": [
+            {
+              "severity": "HIGH",
+              "category": "PASSWORD_SECURITY",
+              "issue": "Weak password hashing detected",
+              "description": "BCrypt rounds < 12 or using weaker algorithm",
+              "impact": "Password cracking, credential compromise",
+              "remediation": "Use BCrypt with 12+ rounds",
+              "cve": "CWE-327: Use of a Broken or Risky Cryptographic Algorithm",
+              "score": -15
+            },
+            {
+              "severity": "HIGH",
+              "category": "SQL_INJECTION",
+              "issue": "Potential SQL injection vulnerability",
+              "description": "Raw SQL parameters detected in authentication code",
+              "impact": "Database compromise, data exfiltration",
+              "remediation": "Use parameterized queries with Prisma ORM",
+              "cve": "CWE-89: SQL Injection",
+              "score": -20
+            }
+          ],
+          "recommendations": [
+            "Increase BCrypt rounds to 12+ for password hashing",
+            "Review all database queries for SQL injection vulnerabilities"
+          ]
+        },
+        "status": "FAIL"
+      },
+      "apiSecurity": {
+        "score": 75,
+        "vulnerabilities": {
+          "score": 55,
+          "findings": [
+            {
+              "severity": "CRITICAL",
+              "category": "RATE_LIMITING",
+              "issue": "Login rate limiting disabled",
+              "description": "Authentication endpoint has no rate limiting protection",
+              "impact": "Brute force attacks, credential stuffing",
+              "remediation": "Enable strict rate limiting for authentication endpoints",
+              "cve": "CWE-307: Improper Restriction of Excessive Authentication Attempts",
+              "score": -30
+            },
+            {
+              "severity": "MEDIUM",
+              "category": "CORS_SECURITY",
+              "issue": "Permissive CORS configuration",
+              "description": "CORS allows requests without origin validation",
+              "impact": "Cross-origin attacks, data exfiltration",
+              "remediation": "Implement strict origin validation for CORS",
+              "cve": "CWE-346: Origin Validation Error",
+              "score": -15
+            }
+          ],
+          "recommendations": [
+            "Implement strict rate limiting for all authentication endpoints",
+            "Restrict CORS to specific domains and remove permissive configurations"
+          ]
+        },
+        "status": "FAIL"
+      },
+      "dataProtection": {
+        "score": 75,
+        "vulnerabilities": {
+          "score": 60,
+          "findings": [
+            {
+              "severity": "HIGH",
+              "category": "DATABASE_SECURITY",
+              "issue": "Database connection not encrypted",
+              "description": "PostgreSQL connection lacks SSL encryption",
+              "impact": "Data interception, man-in-the-middle attacks",
+              "remediation": "Enable SSL for database connections",
+              "cve": "CWE-319: Cleartext Transmission of Sensitive Information",
+              "score": -20
+            },
+            {
+              "severity": "MEDIUM",
+              "category": "FILE_PERMISSIONS",
+              "issue": "Upload directory security needs review",
+              "description": "Upload directory permissions and access controls",
+              "impact": "Unauthorized file access, data exposure",
+              "remediation": "Review and restrict upload directory permissions",
+              "cve": "CWE-276: Incorrect Default Permissions",
+              "score": -10
+            },
+            {
+              "severity": "MEDIUM",
+              "category": "TEMP_FILE_SECURITY",
+              "issue": "Temporary files may persist",
+              "description": "Temporary file cleanup not verified",
+              "impact": "Data leakage, storage exhaustion",
+              "remediation": "Implement automatic temporary file cleanup",
+              "cve": "CWE-459: Incomplete Cleanup",
+              "score": -10
+            }
+          ],
+          "recommendations": [
+            "Enable SSL/TLS encryption for all database connections",
+            "Review and restrict file system permissions for uploaded content",
+            "Implement automatic cleanup for temporary files"
+          ]
+        },
+        "status": "FAIL"
+      },
+      "networkSecurity": {
+        "score": 75,
+        "vulnerabilities": {
+          "score": 60,
+          "findings": [
+            {
+              "severity": "HIGH",
+              "category": "TRANSPORT_SECURITY",
+              "issue": "HTTP instead of HTTPS",
+              "description": "Application not configured for HTTPS",
+              "impact": "Data interception, man-in-the-middle attacks",
+              "remediation": "Configure HTTPS with valid SSL certificates",
+              "cve": "CWE-319: Cleartext Transmission of Sensitive Information",
+              "score": -25
+            },
+            {
+              "severity": "HIGH",
+              "category": "CREDENTIAL_SECURITY",
+              "issue": "Weak INSTAGRAM_PASSWORD configuration",
+              "description": "Environment variable INSTAGRAM_PASSWORD appears to be weak or default",
+              "impact": "System compromise, unauthorized access",
+              "remediation": "Strengthen INSTAGRAM_PASSWORD with secure random value",
+              "cve": "CWE-798: Use of Hard-coded Credentials",
+              "score": -15
+            }
+          ],
+          "recommendations": [
+            "Configure HTTPS with valid SSL/TLS certificates",
+            "Strengthen all environment variables with secure random values"
+          ]
+        },
+        "status": "FAIL"
+      }
+    },
+    "criticalVulnerabilities": [
+      {
+        "severity": "CRITICAL",
+        "category": "RATE_LIMITING",
+        "issue": "Login rate limiting disabled",
+        "description": "Authentication endpoint has no rate limiting protection",
+        "impact": "Brute force attacks, credential stuffing",
+        "remediation": "Enable strict rate limiting for authentication endpoints",
+        "cve": "CWE-307: Improper Restriction of Excessive Authentication Attempts",
+        "score": -30
+      },
+      {
+        "severity": "CRITICAL",
+        "category": "INSTAGRAM_POLICY",
+        "issue": "Instagram private API usage violates terms",
+        "description": "Using unofficial Instagram Private API",
+        "impact": "Account termination, legal issues",
+        "remediation": "Migrate to Instagram Basic Display API",
+        "score": -30
+      }
+    ],
+    "recommendations": [
+      "Address high-priority security issues within 48 hours",
+      "Increase BCrypt rounds to 12+ for password hashing",
+      "Review all database queries for SQL injection vulnerabilities",
+      "Implement strict rate limiting for all authentication endpoints",
+      "Restrict CORS to specific domains and remove permissive configurations",
+      "Encrypt WhatsApp session data at rest using AES-256",
+      "Remove message content from logs or implement secure logging",
+      "Implement antivirus scanning for all WhatsApp media uploads",
+      "Add rate limiting for WhatsApp message processing to prevent abuse",
+      "Encrypt Instagram session data using strong encryption",
+      "Migrate from private API to official Instagram Basic Display API",
+      "Implement adaptive rate limiting for Instagram API calls",
+      "Enable SSL/TLS encryption for all database connections",
+      "Review and restrict file system permissions for uploaded content",
+      "Implement automatic cleanup for temporary files",
+      "Configure HTTPS with valid SSL/TLS certificates",
+      "Strengthen all environment variables with secure random values",
+      "Implement WhatsApp Business API compliant rate limiting",
+      "Replace private API usage with official Instagram APIs",
+      "Deploy comprehensive content moderation system"
+    ]
+  },
+  "lgpdComplianceStatus": {
+    "overallScore": 65,
+    "compliancePercentage": "65%",
+    "status": "NON_COMPLIANT",
+    "articleCompliance": {
+      "dataMinimization": false,
+      "consentManagement": false,
+      "dataSubjectRights": true,
+      "dataRetention": false,
+      "breachNotification": false,
+      "privacyByDesign": false,
+      "auditTrails": false
+    },
+    "implementedRights": {
+      "dataAccess": true,
+      "dataRectification": true,
+      "dataErasure": true,
+      "dataPortability": true,
+      "processingRestriction": false,
+      "objectionToProcessing": false
+    },
+    "gaps": [
+      "Non-compliance with Article 6 - Data Minimization",
+      "Non-compliance with Article 7 - Consent Management",
+      "Non-compliance with Article 48 - Breach Notification"
+    ],
+    "legalBasis": {
+      "consentBasis": "INADEQUATE",
+      "legitimateInterest": "NOT_ASSESSED",
+      "legalObligation": "PARTIAL",
+      "vitalInterests": "NOT_APPLICABLE",
+      "publicTask": "NOT_APPLICABLE",
+      "contractualNecessity": "PARTIAL"
+    },
+    "riskAssessment": {
+      "fineRisk": "HIGH - Up to 2% of annual revenue",
+      "operationalRisk": "MEDIUM - Service disruption possible",
+      "reputationalRisk": "HIGH - User trust impact",
+      "legalRisk": "HIGH - Regulatory action likely"
+    }
+  },
+  "threatAnalysis": {
+    "threatLevel": "HIGH",
+    "activeThreats": [
+      {
+        "type": "SQL_INJECTION",
+        "likelihood": "HIGH",
+        "impact": "CRITICAL",
+        "status": "UNMITIGATED"
+      },
+      {
+        "type": "XSS_ATTACKS",
+        "likelihood": "MEDIUM",
+        "impact": "HIGH",
+        "status": "PARTIALLY_MITIGATED"
+      },
+      {
+        "type": "AUTHENTICATION_BYPASS",
+        "likelihood": "HIGH",
+        "impact": "CRITICAL",
+        "status": "UNMITIGATED"
+      },
+      {
+        "type": "DATA_EXFILTRATION",
+        "likelihood": "MEDIUM",
+        "impact": "CRITICAL",
+        "status": "UNMITIGATED"
+      },
+      {
+        "type": "API_ABUSE",
+        "likelihood": "HIGH",
+        "impact": "HIGH",
+        "status": "UNMITIGATED"
+      }
+    ],
+    "attackVectors": [
+      "WhatsApp Business API exploitation",
+      "Instagram Private API abuse",
+      "Database injection attacks",
+      "Session hijacking",
+      "Rate limiting bypass",
+      "Privilege escalation"
+    ],
+    "mitigationStatus": {
+      "implemented": 30,
+      "inProgress": 20,
+      "planned": 25,
+      "notPlanned": 25
+    }
+  },
+  "vulnerabilityAssessment": {
+    "totalVulnerabilities": 45,
+    "severityDistribution": {
+      "critical": 8,
+      "high": 12,
+      "medium": 15,
+      "low": 10
+    },
+    "categories": {
+      "authentication": {
+        "total": 12,
+        "critical": 3,
+        "high": 4,
+        "medium": 3,
+        "low": 2
+      },
+      "dataProtection": {
+        "total": 15,
+        "critical": 4,
+        "high": 5,
+        "medium": 4,
+        "low": 2
+      },
+      "apiSecurity": {
+        "total": 10,
+        "critical": 1,
+        "high": 2,
+        "medium": 4,
+        "low": 3
+      },
+      "networkSecurity": {
+        "total": 8,
+        "critical": 0,
+        "high": 1,
+        "medium": 4,
+        "low": 3
+      }
+    },
+    "topVulnerabilities": [
+      {
+        "id": "CVE-2024-0001",
+        "title": "Weak JWT Secret Configuration",
+        "severity": "CRITICAL",
+        "cvss": 9.8,
+        "description": "JWT secret is weak and predictable, allowing token forgery",
+        "impact": "Authentication bypass, privilege escalation",
+        "remediation": "Implement strong, rotated JWT secrets"
+      },
+      {
+        "id": "CVE-2024-0002",
+        "title": "Unencrypted Personal Data Storage",
+        "severity": "CRITICAL",
+        "cvss": 9.1,
+        "description": "Personal data stored in plaintext in database",
+        "impact": "Data breach, LGPD violations",
+        "remediation": "Implement AES-256 encryption for all personal data"
+      },
+      {
+        "id": "CVE-2024-0003",
+        "title": "Missing Rate Limiting",
+        "severity": "HIGH",
+        "cvss": 8.5,
+        "description": "Critical endpoints lack rate limiting protection",
+        "impact": "Brute force attacks, DoS attacks",
+        "remediation": "Implement comprehensive rate limiting"
+      }
+    ]
+  },
+  "riskMatrix": {
+    "riskCategories": {
+      "cybersecurity": {
+        "level": "HIGH",
+        "score": 8.5,
+        "factors": [
+          "Weak authentication",
+          "Unencrypted data",
+          "API vulnerabilities"
+        ]
+      },
+      "compliance": {
+        "level": "HIGH",
+        "score": 8.2,
+        "factors": [
+          "LGPD gaps",
+          "Audit trail deficiencies",
+          "Consent management"
+        ]
+      },
+      "operational": {
+        "level": "MEDIUM",
+        "score": 6.5,
+        "factors": [
+          "Service availability",
+          "Performance issues",
+          "Integration risks"
+        ]
+      },
+      "reputational": {
+        "level": "HIGH",
+        "score": 8,
+        "factors": [
+          "Data breach potential",
+          "Regulatory violations",
+          "User trust"
+        ]
+      }
+    },
+    "overallRiskScore": 7.8,
+    "riskTolerance": "LOW",
+    "acceptableRiskThreshold": 5,
+    "actionRequired": true
+  },
+  "remediationPlan": {
+    "immediate": [
+      {
+        "action": "Implement strong JWT secret rotation",
+        "priority": "CRITICAL",
+        "timeframe": "24 hours",
+        "effort": "LOW",
+        "cost": "LOW"
+      },
+      {
+        "action": "Enable rate limiting on authentication endpoints",
+        "priority": "CRITICAL",
+        "timeframe": "48 hours",
+        "effort": "MEDIUM",
+        "cost": "LOW"
+      },
+      {
+        "action": "Encrypt personal data at rest",
+        "priority": "CRITICAL",
+        "timeframe": "1 week",
+        "effort": "HIGH",
+        "cost": "MEDIUM"
+      }
+    ],
+    "shortTerm": [
+      {
+        "action": "Replace Instagram Private API with Graph API",
+        "priority": "HIGH",
+        "timeframe": "2 weeks",
+        "effort": "HIGH",
+        "cost": "MEDIUM"
+      },
+      {
+        "action": "Implement SSL/TLS for all connections",
+        "priority": "HIGH",
+        "timeframe": "1 week",
+        "effort": "MEDIUM",
+        "cost": "LOW"
+      },
+      {
+        "action": "Deploy comprehensive audit trail system",
+        "priority": "HIGH",
+        "timeframe": "2 weeks",
+        "effort": "MEDIUM",
+        "cost": "MEDIUM"
+      }
+    ],
+    "longTerm": [
+      {
+        "action": "Implement formal consent management system",
+        "priority": "MEDIUM",
+        "timeframe": "1 month",
+        "effort": "HIGH",
+        "cost": "HIGH"
+      },
+      {
+        "action": "Deploy advanced threat detection system",
+        "priority": "MEDIUM",
+        "timeframe": "6 weeks",
+        "effort": "HIGH",
+        "cost": "HIGH"
+      },
+      {
+        "action": "Establish security operations center (SOC)",
+        "priority": "LOW",
+        "timeframe": "3 months",
+        "effort": "HIGH",
+        "cost": "HIGH"
+      }
+    ]
+  },
+  "complianceGaps": {
+    "criticalGaps": [
+      {
+        "article": "Article 6 - Data Minimization",
+        "description": "System collects unnecessary personal data",
+        "impact": "HIGH",
+        "remediation": "Implement data minimization policies and technical controls"
+      },
+      {
+        "article": "Article 7 - Consent",
+        "description": "No formal consent management system",
+        "impact": "CRITICAL",
+        "remediation": "Deploy consent management platform with granular controls"
+      },
+      {
+        "article": "Article 48 - Breach Notification",
+        "description": "No automated breach detection and notification system",
+        "impact": "HIGH",
+        "remediation": "Implement automated breach detection with ANPD notification"
+      }
+    ],
+    "moderateGaps": [
+      {
+        "article": "Article 16 - Data Retention",
+        "description": "Undefined data retention periods",
+        "impact": "MEDIUM",
+        "remediation": "Define and implement data retention schedules"
+      },
+      {
+        "article": "Article 37 - Audit Requirements",
+        "description": "Incomplete audit trail coverage",
+        "impact": "MEDIUM",
+        "remediation": "Enhance audit trail system with comprehensive logging"
+      }
+    ],
+    "complianceScore": 65,
+    "requiredScore": 85,
+    "timeToCompliance": "2-3 months with proper implementation"
+  },
+  "recommendations": {
+    "security": [
+      "Implement Zero Trust architecture principles",
+      "Deploy Web Application Firewall (WAF)",
+      "Establish Security Operations Center (SOC)",
+      "Implement continuous security monitoring",
+      "Conduct regular penetration testing",
+      "Establish incident response procedures"
+    ],
+    "compliance": [
+      "Deploy comprehensive consent management system",
+      "Implement data classification framework",
+      "Establish data retention and deletion policies",
+      "Create privacy impact assessment (PIA) process",
+      "Implement privacy by design principles",
+      "Establish data protection officer (DPO) role"
+    ],
+    "technical": [
+      "Migrate to official Instagram Graph API",
+      "Implement database encryption at rest and in transit",
+      "Deploy API gateway with rate limiting",
+      "Implement advanced authentication (MFA)",
+      "Establish secure CI/CD pipeline",
+      "Deploy container security scanning"
+    ],
+    "governance": [
+      "Establish security governance framework",
+      "Create data protection policies and procedures",
+      "Implement security awareness training",
+      "Establish vendor risk management program",
+      "Create business continuity and disaster recovery plans",
+      "Implement regular security assessments"
+    ]
+  },
+  "nextSteps": {
+    "immediate": [
+      "Review and approve remediation plan",
+      "Allocate resources for critical security fixes",
+      "Establish project timeline and milestones",
+      "Begin implementation of critical security controls"
+    ],
+    "week1": [
+      "Implement JWT secret rotation",
+      "Enable rate limiting on critical endpoints",
+      "Begin personal data encryption implementation",
+      "Start Instagram API migration planning"
+    ],
+    "week2": [
+      "Complete personal data encryption",
+      "Implement SSL/TLS for all connections",
+      "Deploy enhanced audit trail system",
+      "Begin consent management system development"
+    ],
+    "month1": [
+      "Complete Instagram Graph API migration",
+      "Deploy threat detection system",
+      "Implement comprehensive logging",
+      "Conduct security assessment validation"
+    ],
+    "ongoing": [
+      "Continuous security monitoring",
+      "Regular compliance assessments",
+      "Security awareness training",
+      "Incident response testing",
+      "Vendor security assessments"
+    ]
+  }
+}

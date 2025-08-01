@@ -1,0 +1,176 @@
+{
+  "timestamp": "2025-07-31T17:03:30.891Z",
+  "summary": {
+    "totalTests": 116,
+    "passedTests": 18,
+    "failedTests": 98,
+    "skippedTests": 0,
+    "testSuites": 16,
+    "coverage": {
+      "lines": 2.96,
+      "functions": 2.19,
+      "branches": 1.52,
+      "statements": 2.88
+    }
+  },
+  "performance": {
+    "totalTime": 18020,
+    "averageTestTime": 155.3448275862069,
+    "slowestTest": {
+      "name": "E:\\SITES\\bot_agente\\bot-denuncia\\tests\\unit\\services\\whatsappService.test.js → should initialize WhatsApp service successfully",
+      "duration": 2159
+    },
+    "performanceKPIs": {
+      "under200ms": 60,
+      "under500ms": 60,
+      "under1000ms": 61
+    }
+  },
+  "roadmapCompliance": {
+    "coverageTarget": {
+      "achieved": false,
+      "current": 2.96,
+      "target": 80
+    },
+    "performanceTarget": {
+      "achieved": false,
+      "current": 52,
+      "target": 95
+    },
+    "reliabilityTarget": {
+      "achieved": false,
+      "current": 15.52,
+      "target": 99.9
+    }
+  },
+  "testSuites": [
+    {
+      "name": "\\src\\tests\\instagramHumanizationEngine.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\src\\tests\\optimizedMonitoringSystem.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\security\\vulnerability-scan.test.js",
+      "tests": 24,
+      "passed": 0,
+      "failed": 24,
+      "duration": 906,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\security\\authentication.test.js",
+      "tests": 25,
+      "passed": 0,
+      "failed": 25,
+      "duration": 857,
+      "coverage": null
+    },
+    {
+      "name": "\\src\\tests\\photoApprovalWorkflow.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\src\\tests\\endToEndIntegration.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\integration\\database.test.js",
+      "tests": 14,
+      "passed": 0,
+      "failed": 14,
+      "duration": 2063,
+      "coverage": null
+    },
+    {
+      "name": "\\src\\tests\\monitoringSystem.test.js",
+      "tests": 28,
+      "passed": 5,
+      "failed": 23,
+      "duration": 2223,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\integration\\api.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\e2e\\admin\\denuncias-management.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\e2e\\performance\\core-vitals.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\e2e\\admin\\dashboard.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\textFilterService.test.js",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "duration": 261,
+      "coverage": null
+    },
+    {
+      "name": "\\tests\\unit\\services\\whatsappService.test.js",
+      "tests": 22,
+      "passed": 10,
+      "failed": 12,
+      "duration": 11710,
+      "coverage": null
+    },
+    {
+      "name": "\\src\\tests\\orchestrationValidation.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    },
+    {
+      "name": "\\admin-panel\\src\\App.test.js",
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "duration": 0,
+      "coverage": null
+    }
+  ]
+}

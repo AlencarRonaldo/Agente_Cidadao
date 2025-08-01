@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Painel administrativo para gerenciamento de denúncias cidadãs - São Bernardo do Campo"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Bot de Denúncias - Painel Administrativo</title>
+    
+    <!-- Proteção robusta contra redefinição de propriedades de carteira -->
+    <script>
+      (function() {
+        'use strict';
+        
+        // Intercepta tentativas de definir propriedades no window
+        const originalDefineProperty = Object.defineProperty;
+        
+        Object.defineProperty = function(obj, prop, descriptor) {
+          // Se tentar redefinir ethereum no window, ignora silenciosamente
+          if (obj === window && prop === 'ethereum') {
+            console.warn('🛡️ Bloqueada tentativa de redefinir window.ethereum');
+            return obj; // Retorna sem fazer nada
+          }
+          
+          // Para outras propriedades, usa o comportamento normal
+          return originalDefineProperty.call(this, obj, prop, descriptor);
+        };
+        
+        // Também intercepta erros globais
+        window.addEventListener('error', function(event) {
+          if (event.error && event.error.message && 
+              (event.error.message.includes('redefine property: ethereum') ||
+               event.error.message.includes('Cannot redefine property: ethereum'))) {
+            console.warn('🛡️ Erro de ethereum interceptado e suprimido');
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+          }
+        }, true);
+        
+        // Intercepta erros de promise
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event.reason && event.reason.message && 
+              event.reason.message.includes('ethereum')) {
+            console.warn('🛡️ Promise rejection de ethereum suprimida');
+            event.preventDefault();
+          }
+        });
+        
+        if (typeof console !== 'undefined' && window.location.hostname === 'localhost') {
+          console.log('🛡️ Proteção anti-ethereum ativada');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>

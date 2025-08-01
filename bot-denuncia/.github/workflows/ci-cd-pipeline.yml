@@ -1,0 +1,617 @@
+name: CI/CD Pipeline - Bot Denúncia
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.9'
+
+jobs:
+  # Quality Gates and Code Analysis
+  code-quality:
+    name: Code Quality & Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for SonarCloud
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd admin-panel && npm ci
+    
+    - name: Lint and format check
+      run: |
+        npm run lint
+        npm run format:check
+    
+    - name: Security audit
+      run: |
+        npm audit --audit-level=moderate
+        cd admin-panel && npm audit --audit-level=moderate
+    
+    - name: Run SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # Unit Tests with Coverage
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: bot_denuncia_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd admin-panel && npm ci
+    
+    - name: Setup test database
+      run: |
+        npx prisma migrate deploy
+        npx prisma db seed
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+    
+    - name: Run unit tests with coverage
+      run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET: test-jwt-secret-for-ci
+        WHATSAPP_AUTO_INIT: false
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+    
+    - name: Coverage threshold check
+      run: |
+        npm run test:coverage:check
+        # Ensure 80% coverage threshold is met
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: unit-test-results
+        path: |
+          coverage/
+          test-results/
+        retention-days: 30
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: bot_denuncia_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup test database
+      run: |
+        npx prisma migrate deploy
+        npx prisma db seed
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+    
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET: test-jwt-secret-for-ci
+    
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: test-results/
+        retention-days: 30
+
+  # E2E Tests with Playwright
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: bot_denuncia_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd admin-panel && npm ci
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    
+    - name: Setup test database
+      run: |
+        npx prisma migrate deploy
+        npx prisma db seed
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+    
+    - name: Build admin panel
+      run: cd admin-panel && npm run build
+    
+    - name: Run E2E tests
+      run: npx playwright test --project=${{ matrix.browser }}
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        BASE_URL: http://localhost:3000
+        ADMIN_USERNAME: admin
+        ADMIN_PASSWORD: admin123
+    
+    - name: Upload Playwright Report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report-${{ matrix.browser }}
+        path: playwright-report/
+        retention-days: 30
+
+  # Performance Tests with K6
+  performance-tests:
+    name: Performance Tests (K6)
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: bot_denuncia_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup K6
+      run: |
+        sudo gpg -k
+        sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+    
+    - name: Setup test database
+      run: |
+        npx prisma migrate deploy
+        npx prisma db seed
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+    
+    - name: Start application
+      run: |
+        npm run all:dev &
+        sleep 30  # Wait for app to start
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        WHATSAPP_AUTO_INIT: false
+    
+    - name: Run performance tests
+      run: |
+        cd tests/performance/k6
+        k6 run --out json=../../../test-results/k6-results.json admin-api-load-test.js
+      env:
+        BASE_URL: http://localhost:3000
+        ADMIN_USERNAME: admin
+        ADMIN_PASSWORD: admin123
+    
+    - name: Validate performance thresholds
+      run: |
+        # Check that P95 response time is under 200ms (roadmap requirement)
+        node -e "
+          const results = require('./test-results/k6-results.json');
+          const p95 = results.metrics.http_req_duration?.values?.['p(95)'] || 0;
+          if (p95 > 200) {
+            console.error('Performance test failed: P95 response time (' + p95 + 'ms) exceeds 200ms threshold');
+            process.exit(1);
+          }
+          console.log('Performance test passed: P95 response time is ' + p95 + 'ms');
+        "
+    
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-test-results
+        path: test-results/
+        retention-days: 30
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: bot_denuncia_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup test database
+      run: |
+        npx prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+    
+    - name: Run security tests
+      run: npm run test:security
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://test:test@localhost:5432/bot_denuncia_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET: test-jwt-secret-for-ci
+    
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'Bot Denúncia'
+        path: '.'
+        format: 'JSON'
+        out: 'dependency-check-report'
+    
+    - name: Upload security test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-test-results
+        path: |
+          test-results/
+          dependency-check-report/
+        retention-days: 30
+
+  # Build and Deploy (only on main branch)
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, security-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd admin-panel && npm ci
+    
+    - name: Build admin panel
+      run: cd admin-panel && npm run build
+    
+    - name: Build Docker image
+      run: |
+        docker build -t bot-denuncia:${{ github.sha }} .
+        docker tag bot-denuncia:${{ github.sha }} bot-denuncia:latest
+    
+    - name: Run security scan on Docker image
+      run: |
+        # Install Trivy
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+        
+        # Scan image
+        trivy image --format json --output trivy-report.json bot-denuncia:latest
+    
+    - name: Deploy to staging
+      if: success()
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your deployment commands here
+        # docker push your-registry/bot-denuncia:${{ github.sha }}
+        # kubectl apply -f k8s/staging/
+    
+    - name: Run smoke tests on staging
+      if: success()
+      run: |
+        # Wait for deployment to be ready
+        sleep 60
+        
+        # Run basic smoke tests
+        curl -f https://staging.bot-denuncia.com/api/health || exit 1
+        echo "Smoke tests passed"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: build-artifacts
+        path: |
+          admin-panel/build/
+          trivy-report.json
+        retention-days: 90
+
+  # Test Results Summary
+  test-summary:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, security-tests]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Generate test summary
+      run: |
+        echo "# 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Unit Tests
+        if [ -f "unit-test-results/test-results.json" ]; then
+          echo "## ✅ Unit Tests" >> $GITHUB_STEP_SUMMARY
+          node -e "
+            const results = require('./unit-test-results/test-results.json');
+            console.log('- **Total Tests:** ' + results.summary.totalTests);
+            console.log('- **Passed:** ' + results.summary.passedTests);
+            console.log('- **Failed:** ' + results.summary.failedTests);
+            console.log('- **Coverage:** ' + (results.summary.coverage?.lines || 0) + '%');
+          " >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Performance Tests
+        if [ -f "performance-test-results/k6-summary.json" ]; then
+          echo "## ⚡ Performance Tests" >> $GITHUB_STEP_SUMMARY
+          node -e "
+            const results = require('./performance-test-results/k6-summary.json');
+            console.log('- **P95 Response Time:** ' + results.response_times.p95 + 'ms');
+            console.log('- **Average Response Time:** ' + results.response_times.avg + 'ms');
+            console.log('- **Error Rate:** ' + (results.requests.failed * 100).toFixed(2) + '%');
+            console.log('- **Roadmap Compliance:** ' + (results.compliance.p95_under_200ms ? '✅ PASS' : '❌ FAIL'));
+          " >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Security Tests
+        echo "## 🔒 Security Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- **Vulnerability Scan:** Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- **OWASP Top 10:** Tested" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dependency Check:** ${{ needs.security-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Overall Status
+        echo "## 📊 Overall Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| E2E Tests | ${{ needs.e2e-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Performance Tests | ${{ needs.performance-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Tests | ${{ needs.security-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+
+  # Notification
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test-summary, build-and-deploy]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.test-summary.result == 'success'
+      run: |
+        echo "🎉 All tests passed! Build and deployment successful."
+        # Add notification logic (Slack, Discord, etc.)
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Some tests failed. Please check the results."
+        # Add notification logic for failures

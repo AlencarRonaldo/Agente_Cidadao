@@ -1,0 +1,237 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - heading "Dashboard Bot Denúncias" [level=6]
+  - paragraph: Painel de administração
+  - button "Configurar Instagram"
+  - button "Configurar WhatsApp"
+  - separator
+  - paragraph: Agora mesmo
+  - button "Atualizar dados"
+  - separator
+  - button "Modo escuro"
+  - text: A
+  - paragraph: Admin Teste
+  - text: Administrador
+  - button "Sair"
+- heading "Visão Geral do Sistema" [level=4]
+- paragraph: Acompanhe as métricas e estatísticas em tempo real
+- text: +12.5%
+- heading "9" [level=3]
+- paragraph: Total de Denúncias
+- paragraph: Registros no sistema
+- text: Baixo
+- heading "1" [level=3]
+- paragraph: Aguardando Moderação
+- paragraph: Necessitam ação
+- text: +8.2%
+- heading "3" [level=3]
+- paragraph: Publicadas
+- paragraph: Postadas no Instagram
+- text: Regular
+- heading "33%%" [level=3]
+- paragraph: Taxa de Eficiência
+- paragraph: Aprovação automática
+- heading "Agenda de Postagens" [level=6]
+- paragraph: 2 postagems agendadas
+- text: • 0s atrás
+- button "Atualizar agenda"
+- paragraph: Próxima Publicação
+- text: "1"
+- paragraph: "#DEN-MDRJFK1T-EK2ES"
+- text: ALTA
+- paragraph: Rua cheia de buracos atrapalhando trajeto de ônibus
+- paragraph: VILA SÃO PEDRO
+- paragraph: 31/07/2025, 19:30
+- text: 3h 26m
+- separator
+- paragraph: Próximas na Fila
+- text: "2"
+- paragraph: "#DEN-TEST-403638"
+- text: ALTA
+- paragraph: Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores
+- paragraph: CENTRO
+- paragraph: 31/07/2025, 21:30
+- text: 5h 26m
+- heading "Bairros com Mais Denúncias" [level=6]
+- text: "1"
+- paragraph: CENTRO
+- paragraph: 5 denúncias
+- text: 5 2
+- paragraph: VILA SÃO PEDRO
+- paragraph: 4 denúncias
+- text: "4"
+- heading "Distribuição por Status" [level=6]
+- paragraph: publicada
+- text: 33%
+- paragraph: 3 registros
+- progressbar
+- paragraph: rejeitada admin
+- text: 22%
+- paragraph: 2 registros
+- progressbar
+- paragraph: agendada
+- text: 22%
+- paragraph: 2 registros
+- progressbar
+- paragraph: pendente moderacao
+- text: 11%
+- paragraph: 1 registro
+- progressbar
+- paragraph: recebida
+- text: 11%
+- paragraph: 1 registro
+- progressbar
+- heading "Sistema de Publicação" [level=6]
+- heading "2" [level=4]
+- paragraph: Aguardando
+- heading "0" [level=4]
+- paragraph: Processando
+- heading "3" [level=4]
+- paragraph: Concluídas
+- heading "0" [level=4]
+- paragraph: Falharam
+- heading "Gerenciamento de Denúncias" [level=6]
+- paragraph: Visualize, modere e gerencie todas as denúncias cidadãs
+- text: Buscar
+- textbox "Buscar"
+- text: Status
+- combobox
+- text: Bairro
+- textbox "Bairro"
+- button "Limpar"
+- button
+- table:
+  - rowgroup:
+    - row "Protocolo Status Texto Bairro Data Ações":
+      - columnheader "Protocolo"
+      - columnheader "Status"
+      - columnheader "Texto"
+      - columnheader "Bairro"
+      - columnheader "Data"
+      - columnheader "Ações"
+  - rowgroup:
+    - row "DEN-TEST-RECEBIDA-HXOLWYPN2 Recebida Segunda denúncia para teste - iluminação pública quebrada VILA SÃO PEDRO 31/07/2025 16:03":
+      - cell "DEN-TEST-RECEBIDA-HXOLWYPN2":
+        - paragraph: DEN-TEST-RECEBIDA-HXOLWYPN2
+      - cell "Recebida"
+      - cell "Segunda denúncia para teste - iluminação pública quebrada":
+        - paragraph: Segunda denúncia para teste - iluminação pública quebrada
+      - cell "VILA SÃO PEDRO"
+      - cell "31/07/2025 16:03":
+        - paragraph: 31/07/2025 16:03
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+          - button "Aprovar denúncia (agenda na fila)"
+          - button "⚡ Aprovar e Postar AGORA (Bypass da Fila)": ⚡
+          - button "Rejeitar denúncia"
+          - button "Editar denúncia"
+    - row "DEN-TEST-MODERACAO-HAOJ360F2 Pendente Moderação Teste para verificar botão Aprovar e Postar - buraco perigoso na esquina CENTRO 31/07/2025 16:03":
+      - cell "DEN-TEST-MODERACAO-HAOJ360F2":
+        - paragraph: DEN-TEST-MODERACAO-HAOJ360F2
+      - cell "Pendente Moderação"
+      - cell "Teste para verificar botão Aprovar e Postar - buraco perigoso na esquina":
+        - paragraph: Teste para verificar botão Aprovar e Postar - buraco perigoso na esquina
+      - cell "CENTRO"
+      - cell "31/07/2025 16:03":
+        - paragraph: 31/07/2025 16:03
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+          - button "Aprovar denúncia (agenda na fila)"
+          - button "⚡ Aprovar e Postar AGORA (Bypass da Fila)": ⚡
+          - button "Rejeitar denúncia"
+          - button "Editar denúncia"
+    - row "DEN-TEST-BYPASS-280966 Publicada Denúncia de teste para bypass da fila - buraco perigoso na via CENTRO 31/07/2025 15:41":
+      - cell "DEN-TEST-BYPASS-280966":
+        - paragraph: DEN-TEST-BYPASS-280966
+      - cell "Publicada"
+      - cell "Denúncia de teste para bypass da fila - buraco perigoso na via":
+        - paragraph: Denúncia de teste para bypass da fila - buraco perigoso na via
+      - cell "CENTRO"
+      - cell "31/07/2025 15:41":
+        - paragraph: 31/07/2025 15:41
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-TEST-BYPASS-128073 Publicada Denúncia de teste para bypass da fila - buraco perigoso na via CENTRO 31/07/2025 15:22":
+      - cell "DEN-TEST-BYPASS-128073":
+        - paragraph: DEN-TEST-BYPASS-128073
+      - cell "Publicada"
+      - cell "Denúncia de teste para bypass da fila - buraco perigoso na via":
+        - paragraph: Denúncia de teste para bypass da fila - buraco perigoso na via
+      - cell "CENTRO"
+      - cell "31/07/2025 15:22":
+        - paragraph: 31/07/2025 15:22
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-TEST-630924 Rejeitada (Admin) Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores CENTRO 31/07/2025 15:13":
+      - cell "DEN-TEST-630924":
+        - paragraph: DEN-TEST-630924
+      - cell "Rejeitada (Admin)"
+      - cell "Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores":
+        - paragraph: Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores
+      - cell "CENTRO"
+      - cell "31/07/2025 15:13":
+        - paragraph: 31/07/2025 15:13
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-TEST-403638 Agendada Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores CENTRO 31/07/2025 15:10":
+      - cell "DEN-TEST-403638":
+        - paragraph: DEN-TEST-403638
+      - cell "Agendada"
+      - cell "Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores":
+        - paragraph: Teste de denúncia para verificar ações - semáforo quebrado na Rua das Flores
+      - cell "CENTRO"
+      - cell "31/07/2025 15:10":
+        - paragraph: 31/07/2025 15:10
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-MDRN6Y0A-9ULDV Rejeitada (Admin) Rua cheia de buracos atrapalhando o fluxo de carros e ônibus VILA SÃO PEDRO 31/07/2025 14:02":
+      - cell "DEN-MDRN6Y0A-9ULDV":
+        - paragraph: DEN-MDRN6Y0A-9ULDV
+      - cell "Rejeitada (Admin)"
+      - cell "Rua cheia de buracos atrapalhando o fluxo de carros e ônibus":
+        - paragraph: Rua cheia de buracos atrapalhando o fluxo de carros e ônibus
+      - cell "VILA SÃO PEDRO"
+      - cell "31/07/2025 14:02":
+        - paragraph: 31/07/2025 14:02
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-MDRJFK1T-EK2ES Agendada Rua cheia de buracos atrapalhando trajeto de ônibus VILA SÃO PEDRO 31/07/2025 12:16":
+      - cell "DEN-MDRJFK1T-EK2ES":
+        - paragraph: DEN-MDRJFK1T-EK2ES
+      - cell "Agendada"
+      - cell "Rua cheia de buracos atrapalhando trajeto de ônibus":
+        - paragraph: Rua cheia de buracos atrapalhando trajeto de ônibus
+      - cell "VILA SÃO PEDRO"
+      - cell "31/07/2025 12:16":
+        - paragraph: 31/07/2025 12:16
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+    - row "DEN-MDQQVIAF-AFP6D Publicada Buracos na rua atrapalhando o fluxo de carros e ônibus VILA SÃO PEDRO 30/07/2025 22:57":
+      - cell "DEN-MDQQVIAF-AFP6D":
+        - paragraph: DEN-MDQQVIAF-AFP6D
+      - cell "Publicada"
+      - cell "Buracos na rua atrapalhando o fluxo de carros e ônibus":
+        - paragraph: Buracos na rua atrapalhando o fluxo de carros e ônibus
+      - cell "VILA SÃO PEDRO"
+      - cell "30/07/2025 22:57":
+        - paragraph: 30/07/2025 22:57
+      - cell:
+        - group:
+          - button "Visualizar denúncia"
+- paragraph: Itens por página
+- combobox "Itens por página 10": "10"
+- paragraph: 1-9 de 9
+- button "Go to previous page" [disabled]
+- button "Go to next page" [disabled]
+- tooltip "⚡ Aprovar e Postar AGORA (Bypass da Fila)"
+```

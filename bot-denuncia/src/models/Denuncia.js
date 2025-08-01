@@ -1,0 +1,1 @@
+// Lógica de negócio relacionada ao modelo Denuncia.

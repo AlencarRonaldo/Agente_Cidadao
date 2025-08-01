@@ -1,0 +1,83 @@
+# Multi-stage build for production optimization
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies for build
+RUN npm ci --include=dev
+
+# Copy source code
+COPY src ./src/
+COPY babel.config.js ./
+COPY jest.setup.js ./
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    dumb-init \
+    tini \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+WORKDIR /app
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+COPY --chown=nextjs:nodejs src ./src/
+COPY --chown=nextjs:nodejs prisma ./prisma/
+COPY --chown=nextjs:nodejs keys ./keys/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/uploads /app/temp /app/uploads/images /app/uploads/thumbnails
+RUN chown -R nextjs:nodejs /app/logs /app/uploads /app/temp
+
+# Health check script
+COPY deployment/scripts/health-check.sh /usr/local/bin/health-check.sh
+RUN chmod +x /usr/local/bin/health-check.sh
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV PORT=3000
+ENV HEALTH_CHECK_PORT=3001
+
+# Expose ports
+EXPOSE 3000 3001
+
+# Switch to non-root user
+USER nextjs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /usr/local/bin/health-check.sh
+
+# Use tini as init system
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start application with process manager
+CMD ["node", "src/index.js"]

@@ -1,0 +1,241 @@
+groups:
+  - name: bot-denuncia-critical
+    rules:
+      # Application Health Alerts
+      - alert: ApplicationDown
+        expr: up{job=~"bot-denuncia-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: bot-denuncia
+        annotations:
+          summary: "Bot Denuncia application is down"
+          description: "{{ $labels.job }} has been down for more than 1 minute"
+
+      - alert: ApplicationUnhealthy
+        expr: |
+          (
+            health_status{job=~"bot-denuncia-.*"} != 1
+          ) or (
+            absent(health_status{job=~"bot-denuncia-.*"})
+          )
+        for: 2m
+        labels:
+          severity: critical
+          service: bot-denuncia
+        annotations:
+          summary: "Bot Denuncia application is unhealthy"
+          description: "{{ $labels.job }} health check is failing for more than 2 minutes"
+
+      # Database Alerts
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL database has been down for more than 30 seconds"
+
+      - alert: DatabaseSlowQueries
+        expr: avg_over_time(database_query_duration_seconds[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database queries are slow"
+          description: "Average database query time is {{ $value }}s over the last 5 minutes"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been down for more than 30 seconds"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }} of available memory"
+
+  - name: bot-denuncia-performance
+    rules:
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: avg_over_time(http_request_duration_seconds[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: bot-denuncia
+        annotations:
+          summary: "High response time detected"
+          description: "Average response time is {{ $value }}s for {{ $labels.job }}"
+
+      # Memory Usage Alerts
+      - alert: HighMemoryUsage
+        expr: (process_resident_memory_bytes / node_memory_MemTotal_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: bot-denuncia
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      # CPU Usage Alerts
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: bot-denuncia
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      # Disk Space Alerts
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Low disk space"
+          description: "Only {{ $value | humanizePercentage }} disk space available on {{ $labels.device }}"
+
+  - name: bot-denuncia-business
+    rules:
+      # Queue Alerts
+      - alert: HighQueueSize
+        expr: queue_size > 1000
+        for: 2m
+        labels:
+          severity: warning
+          service: bot-denuncia
+        annotations:
+          summary: "High queue size"
+          description: "Queue {{ $labels.queue_name }} has {{ $value }} items"
+
+      - alert: QueueProcessingStalled
+        expr: rate(queue_processed_total[5m]) == 0 and queue_size > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: bot-denuncia
+        annotations:
+          summary: "Queue processing stalled"
+          description: "Queue {{ $labels.queue_name }} has items but processing rate is 0"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          service: bot-denuncia
+        annotations:
+          summary: "High error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+
+      # WhatsApp Service Alerts
+      - alert: WhatsAppDisconnected
+        expr: whatsapp_connection_status != 1
+        for: 2m
+        labels:
+          severity: critical
+          service: whatsapp
+        annotations:
+          summary: "WhatsApp service disconnected"
+          description: "WhatsApp service has been disconnected for more than 2 minutes"
+
+      # Instagram Service Alerts
+      - alert: InstagramServiceDown
+        expr: instagram_service_status != 1
+        for: 5m
+        labels:
+          severity: warning
+          service: instagram
+        annotations:
+          summary: "Instagram service is down"
+          description: "Instagram service has been down for more than 5 minutes"
+
+  - name: bot-denuncia-security
+    rules:
+      # Security Alerts
+      - alert: TooManyFailedLogins
+        expr: rate(failed_login_attempts_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Too many failed login attempts"
+          description: "{{ $value }} failed login attempts per second in the last 5 minutes"
+
+      - alert: SuspiciousActivity
+        expr: rate(suspicious_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "{{ $value }} suspicious requests per second detected"
+
+      # Certificate Expiry Alert
+      - alert: TLSCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 1h
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "TLS certificate expiring soon"
+          description: "TLS certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+
+  - name: bot-denuncia-deployment
+    rules:
+      # Deployment Health
+      - alert: DeploymentUnhealthy
+        expr: deployment_health_status != 1
+        for: 1m
+        labels:
+          severity: critical
+          service: deployment
+        annotations:
+          summary: "Deployment is unhealthy"
+          description: "Deployment {{ $labels.environment }} is not healthy"
+
+      # Environment Switch Alert
+      - alert: EnvironmentSwitchRequired
+        expr: environment_switch_recommended == 1
+        for: 30s
+        labels:
+          severity: critical
+          service: deployment
+        annotations:
+          summary: "Environment switch recommended"
+          description: "Health monitor recommends switching from {{ $labels.current_env }} to {{ $labels.target_env }}"
+
+      # Blue-Green Deployment Status
+      - alert: BlueGreenSyncIssue
+        expr: abs(blue_green_health_diff) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: deployment
+        annotations:
+          summary: "Blue-Green environments out of sync"
+          description: "Health difference between blue and green environments is {{ $value }}"
