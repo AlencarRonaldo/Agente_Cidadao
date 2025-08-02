@@ -126,7 +126,7 @@ const humanizationConfig = {
                 "Solicitamos atenção dos vereadores para esta demanda.",
                 "Confiamos na atuação dos nossos representantes.",
                 "A população espera medidas efetivas dos vereadores.",
-                "Pedimos apoio dos vereadores nesta questão importante.",
+                // "Pedimos apoio dos vereadores nesta questão importante.", // DESABILITADO - Gera posts genéricos
                 "Esperamos que os representantes tomem conhecimento.",
                 "Contamos com o comprometimento dos vereadores eleitos."
             ]

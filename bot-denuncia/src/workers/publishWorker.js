@@ -1,7 +1,7 @@
 const queueManager = require('../queues/queueManager');
 const cron = require('node-cron');
 const prisma = require('../config/database');
-const instagramService = require('../services/instagramService');
+const instagramApiManager = require('../services/instagramApiManager');
 const smartAnalysisService = require('../services/smartAnalysisService');
 const logger = require('../utils/logger');
 const { CONFIG } = require('../config/constants');
@@ -137,6 +137,26 @@ async function publishPostJob(job) {
     throw new Error('ID da denúncia inválido para publicação');
   }
   
+  // VALIDAÇÃO OBRIGATÓRIA: Verificar se denúncia existe e está aprovada
+  const denuncia = await prisma.denuncia.findUnique({
+    where: { id: parseInt(denunciaId) },
+    include: { vereadores: true }
+  });
+  
+  if (!denuncia) {
+    throw new Error(`Denúncia ${denunciaId} não encontrada no banco de dados`);
+  }
+  
+  if (denuncia.status !== 'APROVADA_ADMIN') {
+    throw new Error(`Denúncia ${denunciaId} não está aprovada para publicação (status: ${denuncia.status})`);
+  }
+  
+  if (!denuncia.fotoUrl) {
+    throw new Error(`Denúncia ${denunciaId} não possui imagem para publicação`);
+  }
+  
+  logger.info(`[PUBLISH] Validação OK - Denúncia ${denunciaId} (protocolo: ${denuncia.protocolo}) aprovada para publicação`);
+  
   const startTime = Date.now();
   logger.info(`[PUBLISH] Iniciando publicação da denúncia: ${denunciaId}`);
   
@@ -211,19 +231,20 @@ async function publishPostJob(job) {
     // Status já existe, não precisa alterar antes da publicação
     logger.info(`[PUBLISH] Iniciando publicação para denúncia ${denunciaId} (status: ${denuncia.status})`);
     
-    // Inicializar Instagram service se necessário
-    const instagramInitialized = await instagramService.initialize();
-    if (!instagramInitialized) {
-      throw new Error('Falha ao inicializar serviço do Instagram');
+    // Verificar conexão do Instagram API Manager
+    const connectionTest = await instagramApiManager.testConnection();
+    if (!connectionTest.success) {
+      throw new Error(`Falha na conexão com Instagram: ${connectionTest.error}`);
     }
     
-    // Publicar no Instagram com timeout e validação
+    // Publicar no Instagram usando API Manager com timeout e validação
     const publicationTimeout = 30000; // 30 segundos
     const resultado = await Promise.race([
-      instagramService.publicar({
+      instagramApiManager.publicar({
         texto: textoPost,
         imagem: denuncia.imagemUrl,
-        vereadores: denuncia.vereadores
+        vereadores: denuncia.vereadores,
+        bairro: denuncia.bairro
       }),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout na publicação do Instagram')), publicationTimeout)
@@ -245,7 +266,12 @@ async function publishPostJob(job) {
       publicacoesHoje++;
       const processingTime = Date.now() - startTime;
       
-      logger.info(`[PUBLISH] Denúncia ${denunciaId} publicada com sucesso em ${processingTime}ms. Total hoje: ${publicacoesHoje}`);
+      logger.info(`[PUBLISH] Denúncia ${denunciaId} publicada com sucesso em ${processingTime}ms via ${resultado.apiType || 'unknown'} API. Total hoje: ${publicacoesHoje}`, {
+        apiType: resultado.apiType,
+        serviceUsed: resultado.serviceUsed,
+        usedFallback: resultado.usedFallback || false,
+        migrationReady: resultado.migrationReady || false
+      });
       
       // Notificar usuário via WhatsApp (implementar se necessário)
       // await notificarUsuario(denuncia.phoneNumber, denuncia.protocolo, resultado.postUrl);
@@ -255,7 +281,11 @@ async function publishPostJob(job) {
         postId: resultado.postId,
         postUrl: resultado.postUrl,
         publicacoesHoje,
-        processingTime
+        processingTime,
+        apiType: resultado.apiType,
+        serviceUsed: resultado.serviceUsed,
+        usedFallback: resultado.usedFallback || false,
+        migrationReady: resultado.migrationReady || false
       };
     } else {
       const error = new Error(`Falha ao publicar no Instagram: ${resultado.error}`);

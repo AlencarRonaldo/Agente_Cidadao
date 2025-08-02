@@ -9,7 +9,7 @@ const { MESSAGES, QUICK_REPLIES, ESTADOS_CONVERSA, TIMEOUT_CONVERSA, CATEGORIAS_
 const textFilterService = require('./textFilterService');
 const geoService = require('./geoService');
 const vereadorService = require('./vereadorService');
-const instagramService = require('./instagramService');
+const instagramApiManager = require('./instagramApiManager');
 const uploadService = require('./uploadService');
 const logger = require('../utils/logger');
 

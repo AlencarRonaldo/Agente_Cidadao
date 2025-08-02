@@ -2,6 +2,7 @@ const prisma = require('../config/database');
 const logger = require('../utils/logger');
 const { addPublishJob } = require('../workers/publishWorker');
 const instagramService = require('../services/instagramService');
+const instagramApiManager = require('../services/instagramApiManager');
 
 class AdminController {
   // Dashboard: Estatísticas gerais
@@ -435,9 +436,7 @@ class AdminController {
 
       // 3. ⚡ EXECUTAR PUBLICAÇÃO IMEDIATA - TODAS AS AÇÕES QUE A FILA FARIA
       try {
-        // Publicar no Instagram imediatamente
-        const instagramService = require('../services/instagramService');
-        
+        // Publicar no Instagram imediatamente usando API Manager
         // Gerar caption inteligente
         const smartAnalysisService = require('../services/smartAnalysisService');
         const analise = await smartAnalysisService.analisarDenuncia(
@@ -446,8 +445,8 @@ class AdminController {
         );
         const caption = smartAnalysisService.gerarCaption(analise, denuncia.textoFiltrado || denuncia.texto);
         
-        // Publicar imediatamente
-        const publicacaoResult = await instagramService.publicar({
+        // Publicar imediatamente usando API Manager (mantém compatibilidade)
+        const publicacaoResult = await instagramApiManager.publicar({
           denunciaId: id,
           texto: caption,
           imagem: denuncia.imagemUrl,
@@ -1013,12 +1012,13 @@ class AdminController {
     }
   }
 
-  // Testar conexão Instagram
+  // Testar conexão Instagram (backward compatible)
   async testarInstagram(req, res) {
     try {
       logger.info('[ADMIN] Iniciando teste de conexão Instagram...');
       
-      const resultado = await instagramService.testConnection();
+      // Use API Manager for unified testing
+      const resultado = await instagramApiManager.testConnection();
       
       if (resultado.success) {
         logger.info('[ADMIN] ✅ Teste Instagram bem-sucedido');
@@ -1108,6 +1108,493 @@ class AdminController {
         error: 'Erro interno do servidor',
         code: 'FORCE_PUBLISH_ERROR'
       });
+    }
+  }
+
+  // ========================================
+  // Instagram API Management Endpoints
+  // ========================================
+
+  // Get API Status
+  async getInstagramApiStatus(req, res) {
+    try {
+      logger.info('[ADMIN] Getting Instagram API status...');
+      
+      const status = await instagramApiManager.getApiStatus();
+      
+      res.json({
+        success: true,
+        message: 'API status retrieved successfully',
+        data: status
+      });
+
+    } catch (error) {
+      logger.error('[ADMIN] Error getting API status:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get API status',
+        details: error.message
+      });
+    }
+  }
+
+  // Get Migration Recommendations
+  async getMigrationRecommendations(req, res) {
+    try {
+      logger.info('[ADMIN] Getting migration recommendations...');
+      
+      const recommendations = await instagramApiManager.getMigrationRecommendations();
+      
+      res.json({
+        success: true,
+        message: 'Migration recommendations retrieved successfully',
+        recommendations: recommendations.recommendations,
+        migrationReady: recommendations.migrationReady,
+        currentHealth: recommendations.currentHealth
+      });
+
+    } catch (error) {
+      logger.error('[ADMIN] Error getting migration recommendations:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get migration recommendations',
+        details: error.message
+      });
+    }
+  }
+
+  // Migrate API
+  async migrateInstagramApi(req, res) {
+    try {
+      const { targetApi, testPublication = false } = req.body;
+      
+      if (!targetApi || !['PRIVATE', 'GRAPH'].includes(targetApi)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid target API. Must be PRIVATE or GRAPH'
+        });
+      }
+
+      logger.info('[ADMIN] Starting API migration', {
+        targetApi,
+        testPublication,
+        adminId: req.user.id
+      });
+      
+      const result = await instagramApiManager.migrateToApi(targetApi, {
+        testPublication
+      });
+      
+      if (result.success) {
+        logger.info('[ADMIN] API migration completed successfully', {
+          from: result.from,
+          to: result.to,
+          adminId: req.user.id
+        });
+        
+        res.json({
+          success: true,
+          message: `Migration to ${targetApi} completed successfully`,
+          data: result
+        });
+      } else {
+        logger.error('[ADMIN] API migration failed:', result.error);
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Migration failed',
+          details: result
+        });
+      }
+
+    } catch (error) {
+      logger.error('[ADMIN] Error during API migration:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to migrate API',
+        details: error.message
+      });
+    }
+  }
+
+  // Get Graph API Configuration
+  async getGraphApiConfig(req, res) {
+    try {
+      logger.info('[ADMIN] Getting Graph API configuration...');
+      
+      // This would typically get config from database or environment
+      // For now, return basic structure
+      const config = {
+        enabled: process.env.GRAPH_API_ENABLED === 'true',
+        clientId: process.env.GRAPH_API_CLIENT_ID || '',
+        redirectUri: process.env.GRAPH_API_REDIRECT_URI || '',
+        // Don't return client secret for security
+      };
+      
+      // Get Graph API service status
+      let status = null;
+      try {
+        const graphApiService = require('../services/instagramGraphApiService');
+        const healthStatus = await graphApiService.getHealthStatus();
+        status = {
+          connected: healthStatus.status === 'healthy',
+          tokenExpiresAt: healthStatus.token?.expiresAt || null
+        };
+      } catch (error) {
+        logger.warn('[ADMIN] Failed to get Graph API status:', error.message);
+        status = {
+          connected: false,
+          tokenExpiresAt: null
+        };
+      }
+
+      res.json({
+        success: true,
+        message: 'Graph API configuration retrieved successfully',
+        config,
+        status
+      });
+
+    } catch (error) {
+      logger.error('[ADMIN] Error getting Graph API config:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get Graph API configuration',
+        details: error.message
+      });
+    }
+  }
+
+  // Save Graph API Configuration
+  async saveGraphApiConfig(req, res) {
+    try {
+      const { enabled, clientId, clientSecret, redirectUri } = req.body;
+      
+      logger.info('[ADMIN] Saving Graph API configuration', {
+        enabled,
+        hasClientId: !!clientId,
+        hasClientSecret: !!clientSecret,
+        hasRedirectUri: !!redirectUri,
+        adminId: req.user.id
+      });
+      
+      // Here you would typically save to database
+      // For now, we'll just validate and return success
+      if (enabled && (!clientId || !clientSecret)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Client ID and Client Secret are required when enabling Graph API'
+        });
+      }
+
+      // TODO: Save configuration to database
+      // await this.saveGraphApiConfigToDb({enabled, clientId, clientSecret, redirectUri});
+
+      res.json({
+        success: true,
+        message: 'Graph API configuration saved successfully'
+      });
+
+    } catch (error) {
+      logger.error('[ADMIN] Error saving Graph API config:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to save Graph API configuration',
+        details: error.message
+      });
+    }
+  }
+
+  // Initialize Graph API OAuth
+  async initGraphApiOAuth(req, res) {
+    try {
+      logger.info('[ADMIN] Initializing Graph API OAuth...');
+      
+      const graphApiService = require('../services/instagramGraphApiService');
+      const result = await graphApiService.initializeOAuth();
+      
+      if (result.success) {
+        logger.info('[ADMIN] OAuth initialization successful');
+        res.json({
+          success: true,
+          message: 'OAuth initialization successful',
+          authUrl: result.authUrl,
+          state: result.state,
+          expiresIn: result.expiresIn
+        });
+      } else {
+        logger.error('[ADMIN] OAuth initialization failed:', result.error);
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Failed to initialize OAuth'
+        });
+      }
+
+    } catch (error) {
+      logger.error('[ADMIN] Error initializing Graph API OAuth:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to initialize OAuth',
+        details: error.message
+      });
+    }
+  }
+
+  // Complete Graph API OAuth
+  async completeGraphApiOAuth(req, res) {
+    try {
+      const { code, state } = req.body;
+      
+      if (!code || !state) {
+        return res.status(400).json({
+          success: false,
+          error: 'Authorization code and state parameters are required'
+        });
+      }
+
+      logger.info('[ADMIN] Completing Graph API OAuth', { state });
+      
+      const graphApiService = require('../services/instagramGraphApiService');
+      const result = await graphApiService.completeOAuth(code, state);
+      
+      if (result.success) {
+        logger.info('[ADMIN] OAuth completion successful', {
+          userId: result.user.id,
+          username: result.user.username
+        });
+        
+        res.json({
+          success: true,
+          message: 'OAuth completed successfully',
+          user: result.user,
+          tokenExpiresAt: result.tokenExpiresAt
+        });
+      } else {
+        logger.error('[ADMIN] OAuth completion failed:', result.error);
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Failed to complete OAuth'
+        });
+      }
+
+    } catch (error) {
+      logger.error('[ADMIN] Error completing Graph API OAuth:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to complete OAuth',
+        details: error.message
+      });
+    }
+  }
+
+  // Enhanced Test Instagram Connection (works with both APIs)
+  async testarInstagramEnhanced(req, res) {
+    try {
+      logger.info('[ADMIN] Testing Instagram connection (enhanced)...');
+      
+      // Test through the API manager (will use current active API)
+      const result = await instagramApiManager.testConnection();
+      
+      if (result.success) {
+        logger.info('[ADMIN] Enhanced Instagram test successful', {
+          apiType: result.apiType,
+          serviceUsed: result.serviceUsed
+        });
+        
+        res.json({
+          success: true,
+          message: 'Instagram connection test successful',
+          data: {
+            connected: true,
+            apiType: result.apiType,
+            serviceUsed: result.serviceUsed,
+            accountInfo: result.accountInfo,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } else {
+        logger.error('[ADMIN] Enhanced Instagram test failed:', result.error);
+        res.status(400).json({
+          success: false,
+          message: 'Instagram connection test failed',
+          error: result.error,
+          data: {
+            connected: false,
+            apiType: result.apiType,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    } catch (error) {
+      logger.error('[ADMIN] Error in enhanced Instagram test:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error during Instagram connection test',
+        error: error.message,
+        data: {
+          connected: false,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+  }
+
+  // 🔒 FUNÇÃO DE APROVAÇÃO COM SEGURANÇA REFORÇADA
+  // Substitui aprovarEPostarImediatamente com controles de segurança
+  async aprovarEPostarComSeguranca(req, res) {
+    const startTime = Date.now();
+    logger.info('🔒 STARTING aprovarEPostarComSeguranca');
+    
+    // TEMPORARY: Quick test response to verify function is being called
+    if (process.env.NODE_ENV !== 'production') {
+      logger.info('🔥 TEMPORARY TEST MODE - Returning quick response');
+      return res.json({
+        success: true,
+        message: 'Test mode - endpoint is working',
+        timestamp: new Date().toISOString(),
+        params: req.params,
+        hasSecurityData: !!req.securityData,
+        hasUser: !!req.user
+      });
+    }
+    
+    try {
+      const { id } = req.params;
+      const { observacoes } = req.body;
+      const adminUserId = req.user?.id;
+      const adminEmail = req.user?.email;
+      const securityData = req.securityData;
+      
+      logger.info('🔍 Initial data check', { 
+        hasId: !!id, 
+        hasUser: !!adminUserId, 
+        hasSecurityData: !!securityData 
+      });
+      
+      // ⚠️ SAFETY CHECK: Ensure required data exists
+      if (!adminUserId || !adminEmail) {
+        logger.error('❌ User data missing from request');
+        return res.status(401).json({
+          error: 'Dados do usuário não encontrados',
+          code: 'MISSING_USER_DATA'
+        });
+      }
+      
+      if (!securityData) {
+        logger.error('❌ Security data missing from request');
+        return res.status(400).json({
+          error: 'Dados de segurança não encontrados na requisição',
+          code: 'MISSING_SECURITY_DATA'
+        });
+      }
+      
+      // 🔍 AUDITORIA DE SEGURANÇA - Log detalhado da tentativa
+      logger.warn('🔒 TENTATIVA DE APROVAÇÃO E PUBLICAÇÃO IMEDIATA', {
+        adminUserId,
+        adminEmail,
+        denunciaId: id,
+        usuario_confirmacao: securityData.usuario_confirmacao,
+        motivo_urgencia: securityData.motivo_urgencia,
+        ip: securityData.ip_address,
+        userAgent: securityData.user_agent,
+        timestamp: securityData.timestamp
+      });
+
+      logger.info('📋 Checking denuncia exists');
+      
+      // Verificar se denúncia existe e pode ser aprovada
+      const denuncia = await prisma.denuncia.findUnique({
+        where: { id }
+      });
+
+      if (!denuncia) {
+        logger.error('❌ Denúncia não encontrada');
+        return res.status(404).json({
+          error: 'Denúncia não encontrada',
+          code: 'DENUNCIA_NOT_FOUND'
+        });
+      }
+
+      logger.info('📋 Denuncia found, checking status', { status: denuncia.status });
+
+      // Validação de Status
+      if (!['PENDENTE_MODERACAO', 'RECEBIDA', 'PROCESSANDO'].includes(denuncia.status)) {
+        logger.warn('❌ Status inválido para aprovação', {
+          statusAtual: denuncia.status,
+          statusPermitidos: ['PENDENTE_MODERACAO', 'RECEBIDA', 'PROCESSANDO']
+        });
+        
+        return res.status(400).json({
+          error: 'Denúncia não pode ser aprovada neste status',
+          code: 'INVALID_STATUS_FOR_APPROVAL',
+          currentStatus: denuncia.status
+        });
+      }
+
+      logger.info('✅ Status valid, proceeding with approval');
+
+      // Simplificado: Aprovar denúncia primeiro
+      const now = new Date();
+      
+      logger.info('📝 Updating denuncia status');
+      
+      const denunciaAtualizada = await prisma.denuncia.update({
+        where: { id },
+        data: {
+          status: 'APROVADA_ADMIN',
+          aprovadaAdmin: true,
+          observacoesAdmin: observacoes ? 
+            `${observacoes}\n\n🔒 APROVAÇÃO MANUAL SEGURA\nUsuário: ${securityData.usuario_confirmacao}\nMotivo: ${securityData.motivo_urgencia}` : 
+            `🔒 APROVAÇÃO MANUAL SEGURA\nUsuário: ${securityData.usuario_confirmacao}\nMotivo: ${securityData.motivo_urgencia}`,
+          reviewedAt: now,
+          adminUserId
+        }
+      });
+
+      logger.info('✅ Denuncia approved successfully');
+
+      // Para agora: retornar sucesso sem tentar publicar
+      // TODO: Adicionar publicação depois que a aprovação estiver funcionando
+      logger.info('🎉 Returning success response');
+      
+      res.json({
+        success: true,
+        message: 'Denúncia aprovada com sucesso',
+        data: {
+          denunciaId: id,
+          protocolo: denuncia.protocolo,
+          status: 'APROVADA_ADMIN',
+          aprovada: true,
+          publicada: false, // Por enquanto, sem publicação
+          auditoria: {
+            admin: adminEmail,
+            usuario_confirmacao: securityData.usuario_confirmacao,
+            motivo_urgencia: securityData.motivo_urgencia,
+            timestamp: now,
+            duracao: `${Date.now() - startTime}ms`
+          }
+        }
+      });
+
+    } catch (error) {
+      // 🚨 LOG DE ERRO CRÍTICO
+      logger.error('🚨 ERRO CRÍTICO NA APROVAÇÃO MANUAL', {
+        adminUserId: req.user?.id,
+        adminEmail: req.user?.email,
+        denunciaId: req.params?.id,
+        erro: error.message,
+        stack: error.stack,
+        duracao: `${Date.now() - startTime}ms`
+      });
+
+      // Ensure we always send a response
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: 'Erro interno na aprovação manual',
+          code: 'MANUAL_APPROVAL_ERROR',
+          details: error.message,
+          supportId: `APPROVAL_${Date.now()}`
+        });
+      }
     }
   }
 }

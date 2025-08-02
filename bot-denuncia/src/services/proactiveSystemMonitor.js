@@ -357,15 +357,16 @@ class SystemHealthPredictor extends EventEmitter {
      */
     async checkInstagramHealth() {
         try {
-            // Tentar acessar o serviço Instagram
-            const instagramService = require('./instagramService-improved');
-            const healthStatus = await instagramService.getHealthStatus();
+            // Tentar acessar o Instagram API Manager
+            const instagramApiManager = require('./instagramApiManager');
+            const apiStatus = await instagramApiManager.getApiStatus();
             
             this.systemMetrics.instagram = {
-                authStatus: healthStatus.isAuthenticated ? 'authenticated' : 'not_authenticated',
-                riskScore: healthStatus.riskScore || 0,
-                postsToday: healthStatus.postsToday || 0,
-                dailyLimit: healthStatus.dailyLimit || 50,
+                authStatus: apiStatus.apis[apiStatus.currentApi]?.healthy ? 'authenticated' : 'not_authenticated',
+                currentApi: apiStatus.currentApi,
+                healthScore: apiStatus.healthScore,
+                migrationReady: apiStatus.migrationReady,
+                apis: apiStatus.apis,
                 lastCheck: Date.now()
             };
 
@@ -666,10 +667,19 @@ class SystemHealthPredictor extends EventEmitter {
      */
     async slowDownInstagramPosting() {
         try {
-            const instagramService = require('./instagramService-improved');
-            await instagramService.enableSlowMode();
+            const instagramApiManager = require('./instagramApiManager');
             
-            logger.info('[PROACTIVE] Instagram posting slowed down');
+            // Test connection and get migration recommendations if needed
+            const connectionTest = await instagramApiManager.testConnection();
+            if (!connectionTest.success) {
+                const recommendations = await instagramApiManager.getMigrationRecommendations();
+                logger.warn('[PROACTIVE] Instagram connection failed, checking migration options', {
+                    migrationReady: recommendations.migrationReady,
+                    recommendations: recommendations.recommendations
+                });
+            }
+            
+            logger.info('[PROACTIVE] Instagram posting monitoring active');
             
         } catch (error) {
             logger.error('[PROACTIVE] Instagram slow down failed:', error);

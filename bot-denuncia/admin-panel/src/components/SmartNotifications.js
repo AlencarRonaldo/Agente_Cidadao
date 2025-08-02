@@ -26,31 +26,37 @@ const SmartNotifications = ({ notifications = [] }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [localNotifications, setLocalNotifications] = useState([]);
 
+  // Usar useMemo ou useState com inicialização única para evitar re-criação de timestamps
+  const [defaultNotifications] = useState(() => [
+    {
+      id: 1,
+      type: 'success',
+      title: 'Publicação Concluída',
+      message: 'Denúncia #DEN-123 foi publicada com sucesso no Instagram',
+      timestamp: new Date().toISOString(),
+      read: false,
+      actions: ['Ver Post']
+    },
+    {
+      id: 2,
+      type: 'warning',
+      title: 'Limite Diário Próximo',
+      message: 'Você tem apenas 1 publicação restante para hoje',
+      timestamp: new Date().toISOString(),
+      read: false,
+      actions: ['Ver Limites']
+    }
+  ]);
+
   useEffect(() => {
-    // Simular algumas notificações de exemplo
-    const defaultNotifications = [
-      {
-        id: 1,
-        type: 'success',
-        title: 'Publicação Concluída',
-        message: 'Denúncia #DEN-123 foi publicada com sucesso no Instagram',
-        timestamp: new Date().toISOString(),
-        read: false,
-        actions: ['Ver Post']
-      },
-      {
-        id: 2,
-        type: 'warning',
-        title: 'Limite Diário Próximo',
-        message: 'Você tem apenas 1 publicação restante para hoje',
-        timestamp: new Date().toISOString(),
-        read: false,
-        actions: ['Ver Limites']
-      }
-    ];
-    
-    setLocalNotifications(notifications.length > 0 ? notifications : defaultNotifications);
-  }, [notifications]);
+    // Só atualizar se notifications mudou de fato
+    if (notifications.length > 0) {
+      setLocalNotifications(notifications);
+    } else if (localNotifications.length === 0) {
+      // Só definir defaultNotifications se ainda não há notificações locais
+      setLocalNotifications(defaultNotifications);
+    }
+  }, [notifications, defaultNotifications, localNotifications.length]);
 
   useEffect(() => {
     const unread = localNotifications.filter(n => !n.read).length;

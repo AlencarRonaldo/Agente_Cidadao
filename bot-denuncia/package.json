@@ -44,7 +44,11 @@
     "report:generate": "node scripts/generate-test-reports.js",
     "report:coverage": "open coverage/lcov-report/index.html",
     "report:e2e": "npm run test:e2e:report",
-    "fix:chrome": "chrome-fix.bat"
+    "fix:chrome": "chrome-fix.bat",
+    "instagram:validate": "node src/scripts/runInstagramValidation.js",
+    "instagram:health": "node src/scripts/instagramHealthCheck.js",
+    "instagram:test": "jest tests/integration/instagramValidation.test.js",
+    "instagram:report": "node src/scripts/instagramHealthCheck.js --format json --output instagram-health-report.json"
   },
   "keywords": [
     "whatsapp",

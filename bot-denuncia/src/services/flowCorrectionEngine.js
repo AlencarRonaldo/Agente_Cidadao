@@ -6,7 +6,7 @@
 
 const logger = require('../utils/logger');
 const ContextualDiagnostics = require('./contextualDiagnostics');
-const instagramService = require('./instagramService');
+const instagramApiManager = require('./instagramApiManager');
 const { PrismaClient } = require('@prisma/client');
 const fs = require('fs').promises;
 const path = require('path');
@@ -249,24 +249,25 @@ class FlowCorrectionEngine {
         case 'not_logged_in':
         case 'session_expired':
         case 'missing_session':
-          const initResult = await instagramService.initialize();
-          if (initResult) {
+          const connectionTest = await instagramApiManager.testConnection();
+          if (connectionTest.success) {
             return {
               success: true,
-              action: 'instagram_reinitialization',
-              details: 'Instagram service successfully reinitialized',
-              issue_type: issue.type
+              action: 'instagram_connection_verified',
+              details: `Connection verified using ${connectionTest.apiType} API`,
+              issue_type: issue.type,
+              apiType: connectionTest.apiType
             };
           } else {
-            throw new Error('Failed to reinitialize Instagram service');
+            throw new Error(`Failed to verify Instagram connection: ${connectionTest.error}`);
           }
 
         case 'connection_degraded':
-          const testResult = await instagramService.testConnection(2);
-          if (testResult.success) {
+          const apiStatus = await instagramApiManager.getApiStatus();
+          if (apiStatus.healthScore >= 50) {
             return {
               success: true,
-              action: 'connection_test_passed',
+              action: 'api_status_healthy',
               details: 'Instagram connection restored',
               issue_type: issue.type
             };
@@ -529,11 +530,12 @@ class FlowCorrectionEngine {
         };
       }
 
-      // Publicar no Instagram
-      const publishResult = await instagramService.publicar({
+      // Publicar no Instagram usando API Manager
+      const publishResult = await instagramApiManager.publicar({
         texto: denuncia.texto,
         imagem: denuncia.imagePath,
-        vereadores: denuncia.vereadores
+        vereadores: denuncia.vereadores,
+        bairro: denuncia.bairro
       });
 
       if (publishResult.success) {
@@ -610,8 +612,8 @@ class FlowCorrectionEngine {
         }
       });
 
-      // Testar conexão Instagram
-      const connectionTest = await instagramService.testConnection(1);
+      // Testar conexão Instagram API Manager
+      const connectionTest = await instagramApiManager.testConnection();
 
       const validation = {
         instagram_connection: {
@@ -801,8 +803,8 @@ class FlowCorrectionEngine {
     logger.info('🚨 [CORREÇÃO] Executando correção de emergência...');
     
     try {
-      // 1. Reinicializar Instagram
-      const instagramInit = await instagramService.initialize();
+      // 1. Testar conexão Instagram API Manager
+      const connectionTest = await instagramApiManager.testConnection();
       
       // 2. Processar 1 post pendente como teste
       const testPost = await this.prisma.denuncia.findFirst({

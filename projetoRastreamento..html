@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUNCA MAIS NA MÃO - Apresentação Executiva</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border-radius: 20px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            padding: 0.3rem 0.8rem;
+            border-radius: 25px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            margin: 0.2rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+            border-left: 5px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #667eea;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .problema-card {
+            background: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%);
+            border-left: 5px solid #FF6B6B;
+        }
+
+        .solucao-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-left: 5px solid #4ECDC4;
+        }
+
+        .financeiro-card {
+            background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+            border-left: 5px solid #FFD700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+        }
+
+        .vantagem {
+            color: #4ECDC4;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            z-index: 1;
+        }
+
+        .timeline-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+            min-width: 250px;
+            margin: 1rem;
+            border: 3px solid #667eea;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(255,255,255,0.05) 20px,
+                rgba(255,255,255,0.05) 40px
+            );
+            animation: float 30s infinite linear;
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .metric {
+            text-align: center;
+            margin: 1rem;
+        }
+
+        .metric-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4ECDC4;
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .emoji {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+
+        .value-prop {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section h2 {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline {
+                flex-direction: column;
+            }
+            
+            .timeline::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚗 NUNCA MAIS NA MÃO</h1>
+            <p><span class="highlight">RASTREAMENTO + ASSISTÊNCIA REVOLUCIONÁRIO</span></p>
+            <p>A oportunidade de dominar um mercado de <strong>R$ 2,5 bilhões</strong></p>
+        </div>
+
+        <!-- Problemas do Mercado -->
+        <div class="section">
+            <h2>❌ OS PROBLEMAS DO MERCADO ATUAL</h2>
+            <div class="grid">
+                <div class="card problema-card">
+                    <h3>🐌 DEMORA ABSURDA</h3>
+                    <p>Concorrência promete 40-60 minutos, mas muitas vezes demora <strong>3+ horas</strong></p>
+                </div>
+                <div class="card problema-card">
+                    <h3>💸 PREÇOS ABUSIVOS</h3>
+                    <p>Rastreamento + Assistência = <strong>R$ 300-500/mês</strong> (múltiplos contratos)</p>
+                </div>
+                <div class="card problema-card">
+                    <h3>🚫 LIMITAÇÕES RIDÍCULAS</h3>
+                    <p>Máximo <strong>12 acionamentos/ano</strong> • Pane seca = reboque ao posto</p>
+                </div>
+                <div class="card problema-card">
+                    <h3>🤥 PROMESSAS VAZIAS</h3>
+                    <p>Sem garantia de tempo • Equipamentos baratos • Suporte terceirizado</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nossa Solução -->
+        <div class="section">
+            <h2>✅ NOSSA SOLUÇÃO REVOLUCIONÁRIA</h2>
+            <div class="value-prop">
+                <h3>🎯 PROPOSTA ÚNICA DE VALOR</h3>
+                <p style="font-size: 1.5rem;"><span class="highlight">TUDO INCLUSO POR R$ 69,90/MÊS</span></p>
+                <p>Rastreamento + Assistência Ilimitada + Guincho 150km + Garantia de Tempo</p>
+            </div>
+            <div class="grid">
+                <div class="card solucao-card">
+                    <h3>⚡ GARANTIA 1 HORA</h3>
+                    <p>Chegamos em <strong>1 hora</strong> ou <span class="highlight">50% de desconto</span> na mensalidade</p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>⛽ COMBUSTÍVEL NO LOCAL</h3>
+                    <p>Pane seca? <strong>Levamos gasolina até você</strong> (paga só o combustível)</p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>🚛 GUINCHO COMPLETO</h3>
+                    <p>Até <strong>150km inclusos</strong> • Você escolhe o destino</p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>🛠️ ASSISTÊNCIA TOTAL</h3>
+                    <p>Pneu • Chaveiro • Bateria • Mecânico móvel • <strong>Tudo ilimitado</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparativo -->
+        <div class="section">
+            <h2>📊 COMPARATIVO COM A CONCORRÊNCIA</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SERVIÇO</th>
+                            <th>CONCORRÊNCIA</th>
+                            <th>NUNCA MAIS NA MÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Preço Total</strong></td>
+                            <td>R$ 300-500/mês</td>
+                            <td class="vantagem">R$ 69,90/mês</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Garantia Tempo</strong></td>
+                            <td>"Até 60 minutos"</td>
+                            <td class="vantagem">1h ou 50% desconto</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Guincho</strong></td>
+                            <td>100-120km</td>
+                            <td class="vantagem">150km inclusos</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Acionamentos</strong></td>
+                            <td>12/ano limitado</td>
+                            <td class="vantagem">ILIMITADO</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pane Seca</strong></td>
+                            <td>Reboque ao posto</td>
+                            <td class="vantagem">Combustível no local</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="value-prop">
+                <h3>💰 ECONOMIA PARA O CLIENTE</h3>
+                <p style="font-size: 2rem;"><span class="highlight">R$ 2.760 POR ANO</span></p>
+                <p>Nosso cliente economiza mais de R$ 230 por mês!</p>
+            </div>
+        </div>
+
+        <!-- Mercado e Oportunidade -->
+        <div class="section">
+            <h2>🎯 TAMANHO DO MERCADO</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <span class="metric-number">R$ 2,5bi</span>
+                    <span class="metric-label">Mercado Nacional</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">15%</span>
+                    <span class="metric-label">Crescimento/Ano</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">78%</span>
+                    <span class="metric-label">Frota Desprotegida</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">2-3%</span>
+                    <span class="metric-label">Nossa Meta Inicial</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Público-Alvo -->
+        <div class="section">
+            <h2>👥 NOSSO PÚBLICO-ALVO</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>👩‍💼 Ana Executiva</h3>
+                    <p><strong>25-40 anos</strong></p>
+                    <p>• Agenda apertada</p>
+                    <p>• Valoriza rapidez</p>
+                    <p>• Quer garantias</p>
+                    <p class="highlight">"Preciso de alguém confiável"</p>
+                </div>
+                <div class="card">
+                    <h3>👨‍👩‍👧‍👦 João Família</h3>
+                    <p><strong>30-50 anos</strong></p>
+                    <p>• Pai de família</p>
+                    <p>• Busca custo-benefício</p>
+                    <p>• Quer tranquilidade</p>
+                    <p class="highlight">"Proteger sem gastar muito"</p>
+                </div>
+                <div class="card">
+                    <h3>🔧 Carlos Profissional</h3>
+                    <p><strong>25-55 anos</strong></p>
+                    <p>• Trabalha com carro</p>
+                    <p>• Não pode parar</p>
+                    <p>• Precisa de rapidez</p>
+                    <p class="highlight">"Tempo parado = prejuízo"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investimento e Retorno -->
+        <div class="section">
+            <h2>💰 INVESTIMENTO E RETORNO REAL</h2>
+            <div class="grid">
+                <div class="card financeiro-card">
+                    <h3>💸 INVESTIMENTO INICIAL</h3>
+                    <p><span class="highlight">R$ 85.000</span></p>
+                    <p>• Equipamentos + Chips</p>
+                    <p>• Equipe inicial</p>
+                    <p>• Capital de giro</p>
+                </div>
+                <div class="card financeiro-card">
+                    <h3>📈 RECEITA ANO 1</h3>
+                    <p><span class="highlight">R$ 1.677.600</span></p>
+                    <p>• 2.000 clientes ativos</p>
+                    <p>• Ticket médio R$ 69,90</p>
+                    <p>• Crescimento orgânico</p>
+                </div>
+                <div class="card financeiro-card">
+                    <h3>💎 LUCRO ANO 1</h3>
+                    <p><span class="highlight">R$ 631.680</span></p>
+                    <p>• Margem: 37,7%</p>
+                    <p>• ROI: 743% no 1º ano</p>
+                    <p>• Break-even 320 clientes</p>
+                </div>
+                <div class="card financeiro-card">
+                    <h3>🎯 MODELO VALIDADO</h3>
+                    <p><span class="highlight">TODOS CUSTOS</span></p>
+                    <p>• Rastreadores inclusos</p>
+                    <p>• Chips mensais</p>
+                    <p>• Parceiros pagos</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalhamento de Custos -->
+        <div class="section">
+            <h2>📊 DETALHAMENTO COMPLETO DE CUSTOS</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>📡 EQUIPAMENTOS - R$ 35k</h3>
+                    <p>• <strong>200 Rastreadores 4G</strong>: R$ 24.000</p>
+                    <p>• <strong>Chips M2M</strong>: R$ 21.000 (7 meses)</p>
+                    <p>• <strong>Estoque reserva</strong>: R$ 6.000</p>
+                    <p>• <strong>Ferramentas</strong>: R$ 2.000</p>
+                </div>
+                <div class="card">
+                    <h3>👥 EQUIPE INICIAL - R$ 21k</h3>
+                    <p>• <strong>Atendente 24h</strong>: R$ 10.500</p>
+                    <p>• <strong>Instalador</strong>: R$ 10.500</p>
+                    <p>• <strong>3 meses</strong> operação</p>
+                </div>
+                <div class="card">
+                    <h3>🤝 PARCEIROS/MÊS - R$ 10k</h3>
+                    <p>• <strong>Guincho</strong>: R$ 7.800</p>
+                    <p>• <strong>Combustível</strong>: R$ 1.000</p>
+                    <p>• <strong>Outros serviços</strong>: R$ 1.240</p>
+                    <p><em>(Base 500 clientes)</em></p>
+                </div>
+                <div class="card">
+                    <h3>💰 CAPITAL GIRO - R$ 18k</h3>
+                    <p>• <strong>Reserva parceiros</strong>: R$ 15.000</p>
+                    <p>• <strong>Emergências</strong>: R$ 3.000</p>
+                    <p>• <strong>Fluxo de caixa</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estrutura de Custos Operacionais -->
+        <div class="section">
+            <h2>🔄 CUSTOS OPERACIONAIS MENSAIS</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TIPO DE CUSTO</th>
+                            <th>200 CLIENTES</th>
+                            <th>500 CLIENTES</th>
+                            <th>1.000 CLIENTES</th>
+                            <th>2.000 CLIENTES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Custos Fixos</strong></td>
+                            <td>R$ 10.000</td>
+                            <td>R$ 16.000</td>
+                            <td>R$ 22.000</td>
+                            <td>R$ 37.000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Chips M2M</strong></td>
+                            <td>R$ 3.000</td>
+                            <td>R$ 7.500</td>
+                            <td>R$ 15.000</td>
+                            <td>R$ 30.000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custos Parceiros</strong></td>
+                            <td>R$ 5.016</td>
+                            <td>R$ 12.540</td>
+                            <td>R$ 25.080</td>
+                            <td>R$ 50.160</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Custos</strong></td>
+                            <td>R$ 18.016</td>
+                            <td>R$ 36.040</td>
+                            <td>R$ 62.080</td>
+                            <td>R$ 117.160</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Receita</strong></td>
+                            <td>R$ 13.980</td>
+                            <td>R$ 34.950</td>
+                            <td>R$ 69.900</td>
+                            <td>R$ 139.800</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Resultado</strong></td>
+                            <td class="vantagem">-R$ 4.036</td>
+                            <td class="vantagem">-R$ 1.090</td>
+                            <td class="vantagem">R$ 7.820</td>
+                            <td class="vantagem">R$ 22.640</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="value-prop">
+                <h3>🎯 BREAK-EVEN REAL</h3>
+                <p style="font-size: 1.5rem;"><span class="highlight">320 CLIENTES</span></p>
+                <p>Meta realista para o 4º-5º mês de operação</p>
+            </div>
+        </div>
+
+        <!-- Cronograma -->
+        <div class="section">
+            <h2>📅 CRONOGRAMA DE IMPLEMENTAÇÃO</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3>🚀 FASE 1 (0-3 meses)</h3>
+                    <p><strong>Investimento: R$ 45k</strong></p>
+                    <p>• Equipamentos iniciais</p>
+                    <p>• Equipe básica</p>
+                    <p>• Rede 15 parceiros</p>
+                    <p>• 200 primeiros clientes</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>📈 FASE 2 (3-6 meses)</h3>
+                    <p><strong>Investimento: R$ 25k</strong></p>
+                    <p>• Expansão equipamentos</p>
+                    <p>• Marketing intensivo</p>
+                    <p>• 500 clientes ativos</p>
+                    <p>• Break-even próximo</p>
+                </div>
+                <div class="timeline-item">
+                    <h3>🏆 FASE 3 (6-12 meses)</h3>
+                    <p><strong>Reinvestimento: R$ 15k</strong></p>
+                    <p>• Consolidação rede</p>
+                    <p>• 2.000 clientes</p>
+                    <p>• Lucro R$ 22k/mês</p>
+                    <p>• Preparação expansão</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vantagens Competitivas -->
+        <div class="section">
+            <h2>🏆 NOSSAS VANTAGENS COMPETITIVAS</h2>
+            <div class="grid">
+                <div class="card solucao-card">
+                    <h3>🎯 ÚNICOS COM GARANTIA REAL</h3>
+                    <p>1 hora ou 50% de desconto - <strong>ninguém mais oferece isso</strong></p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>🤝 MODELO SUSTENTÁVEL</h3>
+                    <p>Todos os custos mapeados • <strong>ROI real de 743%</strong> • Projeção confiável</p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>💰 ECONOMIA BRUTAL</h3>
+                    <p>R$ 69,90 vs R$ 300+ da concorrência • <strong>Cliente economiza R$ 2.760/ano</strong></p>
+                </div>
+                <div class="card solucao-card">
+                    <h3>🚀 BREAK-EVEN RÁPIDO</h3>
+                    <p>320 clientes = ponto de equilíbrio • <strong>Meta realista em 4-5 meses</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h2>🎯 VAMOS REVOLUCIONAR O MERCADO?</h2>
+            <p><strong>A OPORTUNIDADE É AGORA!</strong></p>
+            <p>Mercado despreparado • Clientes insatisfeitos • Solução inovadora</p>
+            
+            <div class="metrics">
+                <div class="metric">
+                    <span class="metric-number">R$ 85k</span>
+                    <span class="metric-label" style="color: white;">Investimento Total</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">743%</span>
+                    <span class="metric-label" style="color: white;">ROI no 1º Ano</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">320</span>
+                    <span class="metric-label" style="color: white;">Clientes Break-even</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-number">37,7%</span>
+                    <span class="metric-label" style="color: white;">Margem Líquida</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; font-size: 1.5rem; position: relative; z-index: 1;">
+                <span class="highlight">NUNCA MAIS NA MÃO</span><br>
+                <em>O futuro da assistência veicular começa aqui!</em>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

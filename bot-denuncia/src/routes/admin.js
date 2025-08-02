@@ -116,14 +116,15 @@ router.post('/denuncias/:id/aprovar',
   adminController.aprovarDenuncia
 );
 
-// NOVO: Aprovar e Postar Imediatamente - Bypass da Fila (apenas ADMIN e MODERADOR)
+// SEGURANÇA REFORÇADA: Aprovar e Postar com Confirmação Explícita (apenas ADMIN)
 router.post('/denuncias/:id/aprovar-e-postar',
-  requireRole(['ADMIN', 'MODERADOR']),
+  requireRole(['ADMIN']), // RESTRITO APENAS PARA ADMIN
   rateLimits.admin,
   (req, res, next) => {
-    // Validação inline para publicação imediata
-    const { acao, publicar_agora } = req.body;
+    // Validação de segurança aprimorada
+    const { acao, confirmar_publicacao, usuario_confirmacao, motivo_urgencia } = req.body;
     
+    // Validar ação
     if (acao !== 'aprovar_e_postar') {
       return res.status(400).json({
         error: 'Ação deve ser: aprovar_e_postar',
@@ -131,17 +132,58 @@ router.post('/denuncias/:id/aprovar-e-postar',
       });
     }
     
-    if (!publicar_agora || publicar_agora !== true) {
+    // Exigir confirmação explícita do usuário
+    if (!confirmar_publicacao || confirmar_publicacao !== 'CONFIRMO_PUBLICACAO_IMEDIATA') {
       return res.status(400).json({
-        error: 'Campo publicar_agora deve ser true para bypass da fila',
-        code: 'INVALID_BYPASS_FLAG'
+        error: 'Campo confirmar_publicacao deve ser: CONFIRMO_PUBLICACAO_IMEDIATA',
+        code: 'MISSING_CONFIRMATION'
       });
     }
     
+    // Exigir identificação do usuário que confirma
+    if (!usuario_confirmacao || typeof usuario_confirmacao !== 'string' || usuario_confirmacao.length < 3) {
+      return res.status(400).json({
+        error: 'Campo usuario_confirmacao é obrigatório (mínimo 3 caracteres)',
+        code: 'MISSING_USER_CONFIRMATION'
+      });
+    }
+    
+    // Exigir motivo para publicação urgente
+    if (!motivo_urgencia || typeof motivo_urgencia !== 'string' || motivo_urgencia.length < 10) {
+      return res.status(400).json({
+        error: 'Campo motivo_urgencia é obrigatório (mínimo 10 caracteres)',
+        code: 'MISSING_URGENCY_REASON'
+      });
+    }
+    
+    // Adicionar dados de segurança ao request
+    req.securityData = {
+      usuario_confirmacao,
+      motivo_urgencia,
+      ip_address: req.ip,
+      user_agent: req.get('User-Agent'),
+      timestamp: new Date()
+    };
+    
     next();
   },
-  adminController.aprovarEPostarImediatamente
+  adminController.aprovarEPostarComSeguranca
 );
+
+// Log de auditoria para endpoint sensível
+router.use('/denuncias/:id/aprovar-e-postar', (req, res, next) => {
+  const logger = require('../utils/logger');
+  logger.warn('🔐 ACESSO ENDPOINT SENSÍVEL - APROVAÇÃO E PUBLICAÇÃO', {
+    endpoint: '/aprovar-e-postar',
+    user: req.user?.email || 'unknown',
+    userId: req.user?.id || 'unknown',
+    denunciaId: req.params.id,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    timestamp: new Date().toISOString()
+  });
+  next();
+});
 
 // Rejeitar denúncia (apenas ADMIN e MODERADOR)
 router.post('/denuncias/:id/rejeitar',
@@ -1429,6 +1471,66 @@ router.post('/master-flow/shutdown',
 );
 
 // ======= INSTAGRAM CONFIGURATION =======
+
+// ===== Instagram API Management Routes (NEW) =====
+
+// Get Instagram API Status (both Private and Graph APIs)
+router.get('/instagram/api-status',
+  requireRole(['ADMIN']),
+  rateLimits.api,
+  adminController.getInstagramApiStatus
+);
+
+// Get Migration Recommendations
+router.get('/instagram/migration-recommendations',
+  requireRole(['ADMIN']),
+  rateLimits.api,
+  adminController.getMigrationRecommendations
+);
+
+// Migrate Instagram API
+router.post('/instagram/migrate-api',
+  requireRole(['ADMIN']),
+  rateLimits.admin,
+  adminController.migrateInstagramApi
+);
+
+// Get Graph API Configuration
+router.get('/instagram/graph-config',
+  requireRole(['ADMIN']),
+  rateLimits.api,
+  adminController.getGraphApiConfig
+);
+
+// Save Graph API Configuration
+router.post('/instagram/graph-config',
+  requireRole(['ADMIN']),  
+  rateLimits.admin,
+  adminController.saveGraphApiConfig
+);
+
+// Initialize Graph API OAuth
+router.post('/instagram/graph-oauth-init',
+  requireRole(['ADMIN']),
+  rateLimits.admin,
+  adminController.initGraphApiOAuth
+);
+
+// Complete Graph API OAuth
+router.post('/instagram/graph-oauth-complete',
+  requireRole(['ADMIN']),
+  rateLimits.admin,
+  adminController.completeGraphApiOAuth
+);
+
+// Enhanced Instagram Test (works with both APIs)
+router.post('/instagram/test-enhanced',
+  requireRole(['ADMIN']),
+  rateLimits.admin,
+  adminController.testarInstagramEnhanced
+);
+
+// ===== Existing Instagram Routes (Backward Compatible) =====
 
 // Obter configuração atual do Instagram (apenas ADMIN)
 router.get('/instagram/config',

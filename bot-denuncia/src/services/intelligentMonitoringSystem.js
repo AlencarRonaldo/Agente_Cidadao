@@ -718,21 +718,24 @@ parentPort.on('message', async (task) => {
    */
   async checkInstagramHealth() {
     try {
-      const instagramService = require('./instagramService-improved');
+      const instagramApiManager = require('./instagramApiManager');
       const humanizationEngine = require('./instagramHumanizationEngine');
       
-      const serviceStatus = await instagramService.getHealthStatus();
+      const apiStatus = await instagramApiManager.getApiStatus();
       const humanizationMetrics = humanizationEngine.getMetrics();
       
       return {
-        isAuthenticated: serviceStatus.isAuthenticated,
-        postsToday: serviceStatus.postsToday || 0,
-        successRate: serviceStatus.successRate || 0,
+        isAuthenticated: apiStatus.apis[apiStatus.currentApi]?.healthy || false,
+        currentApi: apiStatus.currentApi,
+        healthScore: apiStatus.healthScore,
+        migrationReady: apiStatus.migrationReady,
+        apis: {
+          private: apiStatus.apis.PRIVATE || { healthy: false, enabled: false },
+          graph: apiStatus.apis.GRAPH || { healthy: false, enabled: false }
+        },
         riskScore: humanizationMetrics.currentRiskScore || 0,
         postingRate: humanizationMetrics.postingSuccessRate || 0,
-        lastPostTime: serviceStatus.lastPostTime,
-        dailyLimit: humanizationMetrics.dailyLimit || 0,
-        responseTime: serviceStatus.averageResponseTime || 0
+        dailyLimit: humanizationMetrics.dailyLimit || 0
       };
     } catch (error) {
       throw new Error(\`Instagram health check failed: \${error.message}\`);
@@ -868,8 +871,33 @@ parentPort.on('message', async (task) => {
   }
 
   async recoverInstagram(healthResult) {
-    const instagramService = require('./instagramService-improved');
-    return await instagramService.resetConnection();
+    const instagramApiManager = require('./instagramApiManager');
+    
+    // Test connection first
+    const connectionTest = await instagramApiManager.testConnection();
+    
+    if (!connectionTest.success) {
+      // If current API fails, try to get migration recommendations
+      const recommendations = await instagramApiManager.getMigrationRecommendations();
+      
+      // Check if we can migrate to a healthy API
+      if (recommendations.migrationReady) {
+        const targetApi = instagramApiManager.currentApiType === 'PRIVATE' ? 'GRAPH' : 'PRIVATE';
+        const migrationResult = await instagramApiManager.migrateToApi(targetApi);
+        
+        return {
+          action: 'api_migration',
+          status: migrationResult.success ? 'completed' : 'failed',
+          details: migrationResult
+        };
+      }
+    }
+    
+    return {
+      action: 'connection_test',
+      status: connectionTest.success ? 'completed' : 'failed',
+      details: connectionTest
+    };
   }
 
   async recoverDatabase(healthResult) {

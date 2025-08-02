@@ -201,27 +201,24 @@ async function processDenunciaJob(job) {
       }
     });
     
-    // 6. Se aprovado automaticamente, adicionar à fila de publicação usando queue manager
+    // 🔒 SEGURANÇA: PUBLICAÇÃO AUTOMÁTICA DESABILITADA
+    // Todas as denúncias agora requerem aprovação manual explícita
     if (aprovadoBot) {
-      try {
-        await queueManager.addJob('publish-queue', 'publish-post', {
-          denunciaId,
-          priority: score >= 0.9 ? 1 : 2,
-          source: 'auto_approval'
-        }, {
-          priority: score >= 0.9 ? 1 : 2, // Prioridade maior para posts com score alto
-          delay: 0, // Processar imediatamente (o publishWorker gerencia horários)
-          attempts: 3
-        });
-        
-        logger.info(`[PROCESS] Denúncia ${denunciaId} aprovada automaticamente e adicionada à fila de publicação`);
-      } catch (queueError) {
-        logger.error(`[PROCESS] Erro ao adicionar denúncia ${denunciaId} à fila de publicação:`, queueError);
-        // Não falhar o processamento por erro de fila
-      }
+      // 📋 Log de aprovação automática mas SEM adicionar à fila
+      logger.info(`🔒 [PROCESS] Denúncia ${denunciaId} passou na análise automática mas REQUER APROVAÇÃO MANUAL`);
+      logger.info(`📊 [PROCESS] Score: ${score} | Vereadores: ${vereadores.length} | Status: ${novoStatus}`);
+      
+      // 🛡️ NÃO ADICIONAR À FILA DE PUBLICAÇÃO AUTOMATICAMENTE
+      // await queueManager.addJob('publish-queue', 'publish-post', ...); // DESABILITADO
+      
+      logger.warn(`🚨 [PROCESS] PUBLICAÇÃO AUTOMÁTICA DESABILITADA POR SEGURANÇA - Denúncia ${denunciaId} aguarda aprovação manual`);
+      
     } else {
-      logger.info(`[PROCESS] Denúncia ${denunciaId} marcada para revisão manual`);
+      logger.info(`📋 [PROCESS] Denúncia ${denunciaId} marcada para revisão manual (reprovada pelo bot)`);
     }
+    
+    // 📝 TODAS AS DENÚNCIAS AGORA SEGUEM O FLUXO DE APROVAÇÃO MANUAL
+    logger.info(`✅ [PROCESS] Denúncia ${denunciaId} processada com segurança - aguardando aprovação manual`);
     
     return { 
       success: true, 

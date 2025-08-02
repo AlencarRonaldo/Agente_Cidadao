@@ -122,6 +122,26 @@ function DenunciationList({ token }) {
   const [editedText, setEditedText] = useState('');
   const [observations, setObservations] = useState('');
   
+  // Security validation fields for aprovar-e-postar
+  const [securityFields, setSecurityFields] = useState({
+    confirmarPublicacao: '',
+    usuarioConfirmacao: '',
+    motivoUrgencia: ''
+  });
+  
+  // Validation states for real-time feedback
+  const [fieldErrors, setFieldErrors] = useState({
+    confirmarPublicacao: '',
+    usuarioConfirmacao: '',
+    motivoUrgencia: ''
+  });
+  
+  const [fieldTouched, setFieldTouched] = useState({
+    confirmarPublicacao: false,
+    usuarioConfirmacao: false,
+    motivoUrgencia: false
+  });
+  
   // Image modal states
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState('');
@@ -193,6 +213,11 @@ function DenunciationList({ token }) {
       setActionReason('');
       setEditedText('');
       setObservations('');
+      setSecurityFields({
+        confirmarPublicacao: '',
+        usuarioConfirmacao: '',
+        motivoUrgencia: ''
+      });
       
       // Use immediate state update for better reliability
       setTimeout(() => {
@@ -216,6 +241,22 @@ function DenunciationList({ token }) {
     setEditedText('');
     setObservations('');
     setDialogType('');
+    setSecurityFields({
+      confirmarPublicacao: '',
+      usuarioConfirmacao: '',
+      motivoUrgencia: ''
+    });
+    // Reset validation states
+    setFieldErrors({
+      confirmarPublicacao: '',
+      usuarioConfirmacao: '',
+      motivoUrgencia: ''
+    });
+    setFieldTouched({
+      confirmarPublicacao: false,
+      usuarioConfirmacao: false,
+      motivoUrgencia: false
+    });
   }, []);
 
   // FIXED: Enhanced action handler with better validation
@@ -230,6 +271,14 @@ function DenunciationList({ token }) {
       return;
     }
 
+    // 🐛 DEBUG: Log the action being performed
+    console.log('🐛 DEBUG - handleAction called', {
+      action,
+      denunciaId,
+      payload,
+      timestamp: new Date().toISOString()
+    });
+
     try {      const actionEndpoints = {
         'aprovar': 'aprovar',
         'approve': 'aprovar',
@@ -241,23 +290,69 @@ function DenunciationList({ token }) {
       };
       
       const endpoint = actionEndpoints[action] || action;
-      const url = `/admin/denuncias/${denunciaId}/${endpoint}`;      const response = await apiCall(url, {
+      const url = `/admin/denuncias/${denunciaId}/${endpoint}`;
+      
+      // 🐛 DEBUG: Log request details
+      console.log('🐛 DEBUG - Making API request', {
+        url,
+        method: 'POST',
+        payload,
+        payloadStringified: JSON.stringify(payload)
+      });
+
+      const response = await apiCall(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
+        },  
         body: JSON.stringify(payload)
-      });      if (!response.ok) {
-        const errorText = await response.text();        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      });
+
+      // 🐛 DEBUG: Log response details
+      console.log('🐛 DEBUG - API response received', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🐛 DEBUG - API error response', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
-      const result = await processApiResponse(response);      // Reload data and close dialog
+      const result = await processApiResponse(response);
+      
+      // 🐛 DEBUG: Log successful result
+      console.log('🐛 DEBUG - API success result', {
+        result,
+        action,
+        denunciaId
+      });
+
+      // Reload data and close dialog
       await loadDenuncias();
       closeDialog();
       setSelectedItems([]);
       
-    } catch (err) {      const errorMessage = err.message || 'Erro ao executar ação';
+    } catch (err) {
+      // 🐛 DEBUG: Log error details
+      console.error('🐛 DEBUG - handleAction error', {
+        error: err,
+        message: err.message,
+        stack: err.stack,
+        action,
+        denunciaId,
+        payload
+      });
+      
+      const errorMessage = err.message || 'Erro ao executar ação';
       setError(errorMessage);
     }
   };
@@ -727,15 +822,254 @@ function DenunciationList({ token }) {
                     <strong>Bairro:</strong> {selectedDenuncia?.bairro}
                   </Typography>
                   
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={2}
-                    label="Observações (opcional)"
-                    value={observations}
-                    onChange={(e) => setObservations(e.target.value)}
-                    placeholder="Motivo da publicação imediata, instruções especiais, etc."
-                  />
+                  {/* Security Validation Fields */}
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+                      🔐 Validação de Segurança Obrigatória
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      Por segurança, todos os campos abaixo são obrigatórios para publicação imediata:
+                    </Typography>
+                    <Box component="ul" sx={{ margin: 0, paddingLeft: 2, '& li': { mb: 1 } }}>
+                      <li><strong>Confirmação:</strong> Deve selecionar "CONFIRMO A PUBLICAÇÃO IMEDIATA"</li>
+                      <li><strong>Usuário:</strong> Mínimo 3 caracteres (ex: "João Silva")</li>
+                      <li><strong>Motivo:</strong> Mínimo 10 caracteres explicando a urgência</li>
+                    </Box>
+                    <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic', color: 'info.dark' }}>
+                      💡 Os campos ficam verdes quando preenchidos corretamente
+                    </Typography>
+                  </Alert>
+                  
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <FormControl 
+                        fullWidth 
+                        required 
+                        error={fieldTouched.confirmarPublicacao && !securityFields.confirmarPublicacao}
+                      >
+                        <InputLabel 
+                          sx={{ 
+                            color: securityFields.confirmarPublicacao ? 'success.main' : 'inherit',
+                            '&.Mui-focused': {
+                              color: securityFields.confirmarPublicacao ? 'success.main' : 'primary.main'
+                            }
+                          }}
+                        >
+                          {securityFields.confirmarPublicacao ? '✅' : '🔐'} Confirmar Publicação *
+                        </InputLabel>
+                        <Select
+                          value={securityFields.confirmarPublicacao}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setSecurityFields(prev => ({ ...prev, confirmarPublicacao: value }));
+                            setFieldTouched(prev => ({ ...prev, confirmarPublicacao: true }));
+                            setFieldErrors(prev => ({ 
+                              ...prev, 
+                              confirmarPublicacao: value ? '' : 'Você deve confirmar a publicação imediata' 
+                            }));
+                          }}
+                          onBlur={() => setFieldTouched(prev => ({ ...prev, confirmarPublicacao: true }))}
+                          label="Confirmar Publicação"
+                          sx={{
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: securityFields.confirmarPublicacao ? 'success.main' : 'inherit'
+                            }
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            <Box sx={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
+                              <Typography>⚠️ Selecione para continuar</Typography>
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="CONFIRMO_PUBLICACAO_IMEDIATA">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography sx={{ color: 'success.main', fontWeight: 'bold' }}>✅</Typography>
+                              <Box>
+                                <Typography sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                                  CONFIRMO A PUBLICAÇÃO IMEDIATA
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                  Esta denúncia será publicada instantaneamente
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </MenuItem>
+                        </Select>
+                        {fieldTouched.confirmarPublicacao && !securityFields.confirmarPublicacao && (
+                          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1 }}>
+                            ❌ Este campo é obrigatório - você deve confirmar a publicação
+                          </Typography>
+                        )}
+                        {securityFields.confirmarPublicacao && (
+                          <Typography variant="caption" color="success.main" sx={{ mt: 0.5, ml: 1 }}>
+                            ✅ Confirmação registrada - publicação será imediata
+                          </Typography>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        required
+                        label={`${securityFields.usuarioConfirmacao.length >= 3 ? '✅' : '👤'} Nome do Usuário que Confirma *`}
+                        value={securityFields.usuarioConfirmacao}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSecurityFields(prev => ({ ...prev, usuarioConfirmacao: value }));
+                          setFieldTouched(prev => ({ ...prev, usuarioConfirmacao: true }));
+                          
+                          if (value.length === 0) {
+                            setFieldErrors(prev => ({ ...prev, usuarioConfirmacao: 'Nome é obrigatório' }));
+                          } else if (value.length < 3) {
+                            setFieldErrors(prev => ({ ...prev, usuarioConfirmacao: `Mínimo 3 caracteres (atual: ${value.length})` }));
+                          } else {
+                            setFieldErrors(prev => ({ ...prev, usuarioConfirmacao: '' }));
+                          }
+                        }}
+                        onBlur={() => setFieldTouched(prev => ({ ...prev, usuarioConfirmacao: true }))}
+                        placeholder="Ex: João Silva"
+                        error={fieldTouched.usuarioConfirmacao && fieldErrors.usuarioConfirmacao !== ''}
+                        helperText={
+                          fieldTouched.usuarioConfirmacao && fieldErrors.usuarioConfirmacao ? (
+                            <span style={{ color: 'error.main' }}>❌ {fieldErrors.usuarioConfirmacao}</span>
+                          ) : securityFields.usuarioConfirmacao.length >= 3 ? (
+                            <span style={{ color: 'green' }}>✅ Nome válido - {securityFields.usuarioConfirmacao.length} caracteres</span>
+                          ) : (
+                            'Mínimo 3 caracteres - Nome da pessoa responsável pela aprovação'
+                          )
+                        }
+                        inputProps={{ 
+                          minLength: 3,
+                          maxLength: 100
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: securityFields.usuarioConfirmacao.length >= 3 ? 'success.main' : 'inherit'
+                            }
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        required
+                        multiline
+                        rows={4}
+                        label={`${securityFields.motivoUrgencia.length >= 10 ? '✅' : '📝'} Motivo da Urgência * (${securityFields.motivoUrgencia.length}/10)`}
+                        value={securityFields.motivoUrgencia}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSecurityFields(prev => ({ ...prev, motivoUrgencia: value }));
+                          setFieldTouched(prev => ({ ...prev, motivoUrgencia: true }));
+                          
+                          if (value.length === 0) {
+                            setFieldErrors(prev => ({ ...prev, motivoUrgencia: 'Motivo da urgência é obrigatório' }));
+                          } else if (value.length < 10) {
+                            setFieldErrors(prev => ({ ...prev, motivoUrgencia: `Mínimo 10 caracteres (faltam ${10 - value.length})` }));
+                          } else {
+                            setFieldErrors(prev => ({ ...prev, motivoUrgencia: '' }));
+                          }
+                        }}
+                        onBlur={() => setFieldTouched(prev => ({ ...prev, motivoUrgencia: true }))}
+                        placeholder="Ex: Situação de emergência que requer divulgação imediata para segurança pública..."
+                        error={fieldTouched.motivoUrgencia && fieldErrors.motivoUrgencia !== ''}
+                        helperText={
+                          fieldTouched.motivoUrgencia && fieldErrors.motivoUrgencia ? (
+                            <span style={{ color: 'error.main' }}>❌ {fieldErrors.motivoUrgencia}</span>
+                          ) : securityFields.motivoUrgencia.length >= 10 ? (
+                            <span style={{ color: 'green' }}>✅ Justificativa válida - {securityFields.motivoUrgencia.length} caracteres</span>
+                          ) : (
+                            '💡 Explique detalhadamente por que esta denúncia precisa pular a fila de agendamentos'
+                          )
+                        }
+                        inputProps={{ 
+                          minLength: 10,
+                          maxLength: 500
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: securityFields.motivoUrgencia.length >= 10 ? 'success.main' : 'inherit'
+                            }
+                          }
+                        }}
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={2}
+                        label="Observações Adicionais (Opcional)"
+                        value={observations}
+                        onChange={(e) => setObservations(e.target.value)}
+                        placeholder="Instruções especiais, contexto adicional, etc."
+                      />
+                    </Grid>
+                    
+                    {/* Validation Summary */}
+                    <Grid item xs={12}>
+                      <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                          📋 Status da Validação
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {/* Confirmação Status */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {securityFields.confirmarPublicacao ? (
+                              <Typography color="success.main" sx={{ fontWeight: 'bold' }}>✅ Confirmação: OK</Typography>
+                            ) : (
+                              <Typography color="error.main">❌ Confirmação: Pendente</Typography>
+                            )}
+                          </Box>
+                          
+                          {/* Usuário Status */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {securityFields.usuarioConfirmacao.length >= 3 ? (
+                              <Typography color="success.main" sx={{ fontWeight: 'bold' }}>✅ Usuário: OK ({securityFields.usuarioConfirmacao.length} chars)</Typography>
+                            ) : (
+                              <Typography color="error.main">❌ Usuário: Pendente {securityFields.usuarioConfirmacao.length > 0 ? `(${securityFields.usuarioConfirmacao.length}/3)` : ''}</Typography>
+                            )}
+                          </Box>
+                          
+                          {/* Motivo Status */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {securityFields.motivoUrgencia.length >= 10 ? (
+                              <Typography color="success.main" sx={{ fontWeight: 'bold' }}>✅ Motivo: OK ({securityFields.motivoUrgencia.length} chars)</Typography>
+                            ) : (
+                              <Typography color="error.main">❌ Motivo: Pendente {securityFields.motivoUrgencia.length > 0 ? `(${securityFields.motivoUrgencia.length}/10)` : ''}</Typography>
+                            )}
+                          </Box>
+                        </Box>
+                        
+                        {/* Overall Status */}
+                        <Box sx={{ mt: 2, p: 1.5, borderRadius: 1, bgcolor: 
+                          (securityFields.confirmarPublicacao && 
+                           securityFields.usuarioConfirmacao.length >= 3 && 
+                           securityFields.motivoUrgencia.length >= 10) 
+                          ? 'success.light' : 'warning.light' 
+                        }}>
+                          {(securityFields.confirmarPublicacao && 
+                            securityFields.usuarioConfirmacao.length >= 3 && 
+                            securityFields.motivoUrgencia.length >= 10) ? (
+                            <Typography sx={{ fontWeight: 'bold', color: 'success.dark', textAlign: 'center' }}>
+                              🎉 Todos os campos estão válidos! Você pode publicar agora.
+                            </Typography>
+                          ) : (
+                            <Typography sx={{ fontWeight: 'bold', color: 'warning.dark', textAlign: 'center' }}>
+                              ⚠️ Complete todos os campos obrigatórios para habilitar a publicação.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
                 </Box>
               )}
             </Box>
@@ -780,32 +1114,90 @@ function DenunciationList({ token }) {
             </Button>
           )}
           {dialogType === 'aprovar-e-postar' && (
-            <Button 
-              variant="contained"
-              sx={{
-                background: 'linear-gradient(45deg, #28a745, #007bff)',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                padding: '12px 24px',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #218838, #0056b3)',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                },
-                '&:active': {
-                  transform: 'translateY(0)'
+            <>
+              {/* Validation errors display */}
+              {(!securityFields.confirmarPublicacao || 
+                !securityFields.usuarioConfirmacao || 
+                securityFields.usuarioConfirmacao.length < 3 ||
+                !securityFields.motivoUrgencia ||
+                securityFields.motivoUrgencia.length < 10) && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+                  <Typography variant="caption" color="error" sx={{ fontWeight: 'bold' }}>
+                    ⚠️ Complete todos os campos obrigatórios
+                  </Typography>
+                </Box>
+              )}
+              
+              <Button 
+                variant="contained"
+                sx={{
+                  background: 'linear-gradient(45deg, #28a745, #007bff)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem',
+                  padding: '12px 24px',
+                  minWidth: '250px',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #218838, #0056b3)',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)'
+                  },
+                  '&:disabled': {
+                    background: 'linear-gradient(45deg, #cccccc, #999999)',
+                    color: '#666666',
+                    cursor: 'not-allowed'
+                  }
+                }}
+                disabled={
+                  !securityFields.confirmarPublicacao || 
+                  !securityFields.usuarioConfirmacao || 
+                  securityFields.usuarioConfirmacao.length < 3 ||
+                  !securityFields.motivoUrgencia ||
+                  securityFields.motivoUrgencia.length < 10
                 }
-              }}
-              onClick={() => handleAction('aprovar-e-postar', selectedDenuncia.id, {
-                acao: 'aprovar_e_postar',
-                publicar_agora: true,
-                observacoes: observations,
-                usuario_id: 'admin' // Será substituído pelo auth no backend
-              })}
-            >
-              ⚡ PUBLICAR AGORA MESMO
-            </Button>
+                onClick={() => {
+                  // Double validation before submission
+                  if (!securityFields.confirmarPublicacao || 
+                      !securityFields.usuarioConfirmacao || 
+                      securityFields.usuarioConfirmacao.length < 3 ||
+                      !securityFields.motivoUrgencia ||
+                      securityFields.motivoUrgencia.length < 10) {
+                    // This should never happen due to disabled state, but adding as safety net
+                    alert('⚠️ Por favor, complete todos os campos de validação obrigatórios antes de publicar.');
+                    return;
+                  }
+                  
+                  handleAction('aprovar-e-postar', selectedDenuncia.id, {
+                    acao: 'aprovar_e_postar',
+                    confirmar_publicacao: securityFields.confirmarPublicacao,
+                    usuario_confirmacao: securityFields.usuarioConfirmacao,
+                    motivo_urgencia: securityFields.motivoUrgencia,
+                    observacoes: observations
+                  });
+                }}
+                title={
+                  (!securityFields.confirmarPublicacao || 
+                   !securityFields.usuarioConfirmacao || 
+                   securityFields.usuarioConfirmacao.length < 3 ||
+                   !securityFields.motivoUrgencia ||
+                   securityFields.motivoUrgencia.length < 10) 
+                  ? 'Complete todos os campos obrigatórios para habilitar a publicação'
+                  : 'Clique para publicar imediatamente no Instagram'
+                }
+              >
+                {(!securityFields.confirmarPublicacao || 
+                  !securityFields.usuarioConfirmacao || 
+                  securityFields.usuarioConfirmacao.length < 3 ||
+                  !securityFields.motivoUrgencia ||
+                  securityFields.motivoUrgencia.length < 10) 
+                ? '🔒 VALIDAÇÃO PENDENTE'
+                : '⚡ PUBLICAR AGORA MESMO'
+                }
+              </Button>
+            </>
           )}
         </DialogActions>
       </Dialog>

@@ -50,7 +50,19 @@
       "Bash(wmic process where processid=6264 delete:*)",
       "Bash(wmic process where:*)",
       "Bash(move test-approve-and-post-button.spec.js e2e-tests/)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(pkill:*)",
+      "Bash(python:*)",
+      "Bash(--c7)",
+      "Bash(tasklist:*)",
+      "Bash(env)",
+      "Bash(npx playwright:*)",
+      "Bash(del test-instagram-tokens.js)",
+      "WebFetch(domain:developers.facebook.com)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

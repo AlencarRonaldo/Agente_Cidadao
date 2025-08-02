@@ -1,0 +1,39 @@
+vozdopovobot@gmail.com
+
+senha instagran Vozdopovo@bot1
+
+id do usuario 24204367899231017
+user token
+EAAS2UGR5b44BPLQTZA3fPaU1QC2kJHBu68EQ8DX0Fiua2Ls2ZB8xUNFl5TFMLypmv4ZBTq8bpDZCHZC7VTRaAQTW4kVPqnWXbxPhZBfKnRZBCAF9qwqIqnCr8MK4ZBlZCCd9XG9qSAEJXZAOAog4mJi84p7aZC0rBxlCZCjfI7RlyV3sAEDIqlM3zu9RKZCTSKDlDUAZDZD
+
+tokem do app 1326356306161550|zK4zQ-2Sj9pLi5UHwqMPiIOPs-8
+
+id do aplicativo 1326356306161550
+chave secreta do aplicativo
+e9a232cd8e07c6223f1b793a401cf5fb
+
+id de configuração se a identificação abaixo para continuar a configuração
+4086465214956942
+
+  FACEBOOK_APP_ID=1326356306161550
+  FACEBOOK_APP_SECRET=e9a232cd8e07c6223f1b793a401cf5fb
+  INSTAGRAM_BUSINESS_ID=4086465214956942
+  INSTAGRAM_ACCESS_TOKEN=EAAS2UGR5b44BPLQTZA3fPaU1QC2kJHBu68EQ8DX0Fiua2Ls2ZB8xUNFl5TFMLypmv4ZBTq8bpDZCHZC7VTRaAQTW4kVPqnWXbxPhZBfKnRZBCAF9qwqIqnCr8MK4ZBlZCCd9XG9qSAEJXZAOAog4mJi84p7aZC0rBxlCZCjfI7RlyV3sAEDIqlM3zu9RKZCTSKDlDUAZDZD
+
+
+import hmac
+import hashlib
+
+# Substitua "SEU_TOKEN_DE_ACESSO" pelo seu token de longa duração
+access_token = "EAAS2UGR5b44BPLQTZA3fPaU1QC2kJHBu68EQ8DX0Fiua2Ls2ZB8xUNFl5TFMLypmv4ZBTq8bpDZCHZC7VTRaAQTW4kVPqnWXbxPhZBfKnRZBCAF9qwqIqnCr8MK4ZBlZCCd9XG9qSAEJXZAOAog4mJi84p7aZC0rBxlCZCjfI7RlyV3sAEDIqlM3zu9RKZCTSKDlDUAZDZD"
+
+# Substitua "SUA_CHAVE_SECRETA_DO_APP" pela chave secreta do seu aplicativo
+app_secret = "e9a232cd8e07c6223f1b793a401cf5fb"
+
+appsecret_proof = hmac.new(
+    app_secret.encode('utf-8'),
+    msg=access_token.encode('utf-8'),
+    digestmod=hashlib.sha256
+).hexdigest()
+
+print(appsecret_proof)

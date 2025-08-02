@@ -29,18 +29,25 @@ class InstagramService {
     this.humanizationEngine = new InstagramHumanizationEngine();
     logger.info('🤖 Instagram Humanization Engine initialized');
     
-    if (!this.username || !this.password || 
-        this.username === 'conta_teste_instagram' || 
-        this.password === 'senha_teste_instagram') {
-      logger.error('❌ Instagram credentials not properly configured!', {
+    // Store credentials availability for later checks
+    this.hasValidCredentials = Boolean(
+      this.username && 
+      this.password && 
+      this.username !== 'conta_teste_instagram' && 
+      this.password !== 'senha_teste_instagram'
+    );
+    
+    if (!this.hasValidCredentials) {
+      logger.warn('⚠️ Instagram credentials not properly configured!', {
         hasUsername: Boolean(this.username),
         hasPassword: Boolean(this.password),
-        usingDefaults: this.username === 'conta_teste_instagram'
+        usingDefaults: this.username === 'conta_teste_instagram',
+        message: 'Service will be available but login will fail until credentials are configured'
       });
-      throw new Error('Instagram credentials must be configured in environment variables');
+      // Note: Don't throw error here, allow service to load but mark as unavailable
+    } else {
+      logger.info(`🔐 Instagram service configured for user: ${this.username}`);
     }
-    
-    logger.info(`🔐 Instagram service configured for user: ${this.username}`);
   }
 
   /**
@@ -124,17 +131,64 @@ class InstagramService {
    * Lidar com erros de login
    */
   async handleLoginError(error) {
+    logger.error('🚨 Instagram login error detected:', {
+      errorType: error?.constructor?.name,
+      message: error?.message,
+      hasChallenge: !!(error && error.challenge),
+      challengeType: error?.challenge_type,
+      errorCode: error?.error_type || error?.code
+    });
+
     if (error instanceof IgCheckpointError) {
-      logger.warn('⚠️ Instagram checkpoint required - manual intervention needed');
-      // Handle checkpoint challenge
-      await this.handleCheckpoint(error);
+      logger.warn('⚠️ Instagram checkpoint required - attempting to handle automatically');
+      try {
+        await this.handleCheckpoint(error);
+      } catch (checkpointError) {
+        logger.error('❌ Checkpoint handling failed, service unavailable');
+        throw new Error(
+          'Instagram account requires checkpoint verification. ' +
+          'Please complete verification via Instagram app/website and restart the service.'
+        );
+      }
     } else if (error instanceof IgLoginTwoFactorRequiredError) {
       logger.warn('⚠️ Two-factor authentication required');
-      // Handle 2FA if needed
+      throw new Error(
+        'Instagram account has 2FA enabled. ' +
+        'This automated service cannot handle 2FA challenges. ' +
+        'Please disable 2FA or use Graph API instead.'
+      );
     } else if (error instanceof IgChallengeWrongCodeError) {
-      logger.error('❌ Wrong verification code provided');
+      logger.error('❌ Wrong verification code provided during challenge');
+      throw new Error(
+        'Instagram challenge verification failed with wrong code. ' +
+        'Please complete verification manually via Instagram app.'
+      );
+    } else if (error?.message?.includes('challenge_required')) {
+      logger.error('❌ Instagram challenge required (400 Bad Request)');
+      throw new Error(
+        'Instagram requires additional verification (challenge_required). ' +
+        'Please log into Instagram manually to complete verification.'
+      );
+    } else if (error?.message?.includes('checkpoint_required')) {
+      logger.error('❌ Instagram checkpoint required (400 Bad Request)');
+      throw new Error(
+        'Instagram account requires checkpoint verification. ' +
+        'Please complete verification via Instagram app/website.'
+      );
+    } else if (error?.message?.includes('login_required')) {
+      logger.error('❌ Instagram login failed - credentials may be invalid');
+      throw new Error(
+        'Instagram login failed. Please check credentials or account status.'
+      );
     } else {
-      logger.error('❌ Instagram login failed:', error.message);
+      logger.error('❌ Unknown Instagram login error:', {
+        message: error.message,
+        stack: error.stack
+      });
+      throw new Error(
+        `Instagram login failed: ${error.message}. ` +
+        'Consider using Graph API for more reliable authentication.'
+      );
     }
   }
 
@@ -737,14 +791,67 @@ class InstagramService {
     try {
       logger.info('🔐 Handling Instagram checkpoint challenge...');
       
-      // This would typically require user interaction
-      // For automated systems, you might want to handle this differently
-      await error.challenge.auto();
+      // Check if challenge object exists and has methods
+      if (!error || !error.challenge) {
+        logger.error('❌ Checkpoint error missing challenge object:', {
+          hasError: !!error,
+          hasChallenge: !!(error && error.challenge),
+          errorType: error?.constructor?.name,
+          errorMessage: error?.message
+        });
+        throw new Error(
+          'Instagram checkpoint required but challenge object is not available. ' +
+          'Manual intervention needed via Instagram app or web interface.'
+        );
+      }
+
+      // Check if auto method is available
+      if (typeof error.challenge.auto !== 'function') {
+        logger.error('❌ Challenge auto method not available:', {
+          challenge: error.challenge,
+          availableMethods: Object.keys(error.challenge || {})
+        });
+        throw new Error(
+          'Instagram checkpoint challenge cannot be handled automatically. ' +
+          'Please complete the challenge manually via Instagram app.'
+        );
+      }
+
+      // Try automatic challenge resolution
+      logger.info('📱 Attempting automatic checkpoint resolution...');
+      const challengeResult = await error.challenge.auto();
       
-      logger.info('✅ Checkpoint challenge handled automatically');
+      logger.info('✅ Checkpoint challenge handled automatically', {
+        result: challengeResult
+      });
+      
+      return challengeResult;
+      
     } catch (challengeError) {
-      logger.error('❌ Failed to handle checkpoint:', challengeError.message);
-      throw challengeError;
+      logger.error('❌ Failed to handle checkpoint:', {
+        message: challengeError.message,
+        stack: challengeError.stack,
+        originalError: error?.message
+      });
+      
+      // Provide helpful error message for manual resolution
+      const helpMessage = 
+        'Instagram checkpoint/challenge required. This typically happens when:\n' +
+        '1. Account needs verification (phone/email)\n' +
+        '2. Suspicious activity detected\n' +
+        '3. New device/location login\n\n' +
+        'To resolve:\n' +
+        '1. Log into Instagram app/website manually\n' +
+        '2. Complete any security challenges\n' +
+        '3. Restart the bot service\n' +
+        '4. Consider using Graph API instead of Private API';
+      
+      logger.info('📖 Checkpoint resolution help:', { helpMessage });
+      
+      throw new Error(
+        `Instagram checkpoint challenge failed: ${challengeError.message}. ` +
+        'Manual intervention required via Instagram app.'
+      );
     }
   }
 
@@ -756,8 +863,11 @@ class InstagramService {
       isLoggedIn: this.isLoggedIn,
       username: this.username,
       lastLoginAttempt: this.loginAttempts,
-      hasValidCredentials: Boolean(this.username && this.password),
-      sessionExists: await this.sessionExists()
+      hasValidCredentials: this.hasValidCredentials,
+      sessionExists: await this.sessionExists(),
+      service: 'instagram_private_api',
+      credentialsConfigured: this.hasValidCredentials,
+      canInitialize: this.hasValidCredentials
     };
   }
 
@@ -828,51 +938,82 @@ class InstagramService {
   }
 
   /**
+   * Verificar conexão com Instagram (alias para compatibilidade)
+   */
+  async verificarConexao() {
+    return await this.testConnection(1);
+  }
+
+  /**
    * Testar conexão com Instagram com retry automatico
    */
   async testConnection(maxRetries = 3) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        logger.info(`[INSTAGRAM_TEST] Tentativa ${attempt}/${maxRetries} de conexão...`);
-        
-        const status = await this.getConnectionStatus();
-        
-        if (!status.hasValidCredentials) {
-          return {
-            success: false,
-            message: 'Instagram credentials not configured',
-            details: status
-          };
-        }
-
-        await this.initialize();
-        const accountInfo = await this.getAccountInfo();
-
-        logger.info(`[INSTAGRAM_TEST] ✅ Conexão bem-sucedida na tentativa ${attempt}`);
+    try {
+      const status = await this.getConnectionStatus();
+      
+      if (!status.hasValidCredentials) {
         return {
-          success: true,
-          message: 'Instagram connection successful',
-          accountInfo: accountInfo,
-          attempt: attempt
+          success: false,
+          message: 'Instagram Private API credentials not configured',
+          details: status,
+          recommendation: 'Configure INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD environment variables'
         };
-      } catch (error) {
-        logger.warn(`[INSTAGRAM_TEST] ❌ Tentativa ${attempt}/${maxRetries} falhou:`, error.message);
-        
-        if (attempt === maxRetries) {
-          logger.error(`[INSTAGRAM_TEST] 🚨 Todas as tentativas falharam`);
-          return {
-            success: false,
-            message: error.message,
-            attempts: maxRetries,
-            finalError: true
-          };
-        }
-        
-        // Delay progressivo entre tentativas
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        logger.info(`[INSTAGRAM_TEST] ⏳ Aguardando ${delay}ms antes da próxima tentativa...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
       }
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          logger.info(`[INSTAGRAM_TEST] Tentativa ${attempt}/${maxRetries} de conexão...`);
+          
+          await this.initialize();
+          const accountInfo = await this.getAccountInfo();
+
+          logger.info(`[INSTAGRAM_TEST] ✅ Conexão bem-sucedida na tentativa ${attempt}`);
+          return {
+            success: true,
+            message: 'Instagram Private API connection successful',
+            accountInfo: accountInfo,
+            attempt: attempt
+          };
+        } catch (error) {
+          logger.warn(`[INSTAGRAM_TEST] ❌ Tentativa ${attempt}/${maxRetries} falhou:`, error.message);
+          
+          // Check for specific error types that don't warrant retries
+          if (error.message.includes('checkpoint') || 
+              error.message.includes('challenge') ||
+              error.message.includes('verification')) {
+            return {
+              success: false,
+              message: error.message,
+              errorType: 'verification_required',
+              attempts: attempt,
+              recommendation: 'Complete Instagram verification via app/website'
+            };
+          }
+          
+          if (attempt === maxRetries) {
+            logger.error(`[INSTAGRAM_TEST] 🚨 Todas as tentativas falharam`);
+            return {
+              success: false,
+              message: error.message,
+              attempts: maxRetries,
+              finalError: true,
+              recommendation: 'Check credentials and account status'
+            };
+          }
+          
+          // Delay progressivo entre tentativas
+          const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+          logger.info(`[INSTAGRAM_TEST] ⏳ Aguardando ${delay}ms antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: `Test connection failed: ${error.message}`,
+        error: error.message,
+        recommendation: 'Check service configuration and dependencies'
+      };
     }
   }
 }

@@ -50,13 +50,13 @@ model Denuncia {
   publishedAt         DateTime?
   phoneNumber         String
   adminUserId         String?
-  // Novos campos para sistema de publicação
-  scheduledPublishAt  DateTime?      // Quando deve ser publicado
-  priority            Int?           @default(1) // 1=alta, 2=normal, 3=baixa
-  instagramPostId     String?        // ID do post no Instagram
-  publishAttempts     Int            @default(0) // Tentativas de publicação
-  lastAttemptAt       DateTime?      // Última tentativa de publicação
-  publishError        String?        // Último erro de publicação
+  instagramPostId     String?
+  lastAttemptAt       DateTime?
+  priority            Int?           @default(1)
+  publishAttempts     Int            @default(0)
+  publishError        String?
+  scheduledPublishAt  DateTime?
+  metadata            Json?
   photoPending        PhotoPending[]
 
   @@index([phoneNumber, createdAt])
@@ -153,6 +153,67 @@ model PhotoAuditLog {
   @@index([timestamp])
 }
 
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  adminEmail  String
+  action      String
+  targetType  String
+  targetId    String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  
+  @@index([adminUserId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([timestamp])
+}
+
+model instagram_images {
+  id             String   @id
+  filename       String   @unique
+  original_path  String
+  processed_path String
+  thumbnail_path String
+  public_url     String
+  thumbnail_url  String
+  file_size      Int
+  original_size  Int
+  width          Int
+  height         Int
+  aspect_ratio   Decimal  @db.Decimal(10, 6)
+  mime_type      String
+  metadata       Json     @default("{}")
+  created_at     DateTime @default(now())
+  expires_at     DateTime
+
+  @@index([created_at])
+  @@index([expires_at])
+  @@index([file_size])
+}
+
+model instagram_tokens {
+  id              String    @id
+  user_id         String    @unique
+  username        String
+  account_type    String
+  token_type      String
+  encrypted_token String
+  encryption_iv   String
+  encryption_tag  String
+  expires_at      DateTime
+  created_at      DateTime  @default(now())
+  refreshed_from  String?
+  is_active       Boolean   @default(true)
+  revoked_at      DateTime?
+
+  @@index([created_at])
+  @@index([expires_at])
+  @@index([is_active])
+}
+
 enum EstadoConversa {
   INICIAL
   AGUARDANDO_PROBLEMA
@@ -180,6 +241,8 @@ enum Status {
   AGENDADA
   PUBLICADA
   ERRO
+  NAO_ENCONTRADA
+  TEXTO_INVALIDO
 }
 
 enum Role {
